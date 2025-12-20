@@ -3,98 +3,124 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Defense Exam Attempt Calculator</title>
+    <title>Defense Exam Accurate Attempt Calculator</title>
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f7f6; display: flex; justify-content: center; padding: 20px; }
-        .container { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); max-width: 600px; width: 100%; }
-        h2 { color: #1a3c5e; text-align: center; margin-bottom: 20px; }
-        label { font-weight: bold; display: block; margin-top: 15px; }
-        input, select, button { width: 100%; padding: 12px; margin-top: 8px; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; }
-        button { background-color: #1a3c5e; color: white; border: none; font-size: 16px; cursor: pointer; margin-top: 25px; transition: background 0.3s; }
-        button:hover { background-color: #2c5a8a; }
-        .results { margin-top: 30px; display: none; }
-        .exam-card { border-left: 5px solid #1a3c5e; background: #f9f9f9; padding: 15px; margin-bottom: 10px; border-radius: 4px; }
-        .exam-name { font-weight: bold; color: #333; }
-        .attempts { float: right; color: #d9534f; font-weight: bold; }
-        .eligible { color: #5cb85c !important; }
+        body { font-family: 'Segoe UI', sans-serif; background-color: #0d1b2a; color: #e0e1dd; display: flex; justify-content: center; padding: 20px; }
+        .container { background: #1b263b; padding: 30px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); max-width: 700px; width: 100%; }
+        h2 { color: #e0e1dd; text-align: center; border-bottom: 2px solid #415a77; padding-bottom: 10px; }
+        .input-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-size: 14px; color: #778da9; }
+        input, select { width: 100%; padding: 12px; background: #0d1b2a; border: 1px solid #415a77; color: white; border-radius: 8px; }
+        button { width: 100%; padding: 15px; background: #e0e1dd; color: #0d1b2a; border: none; font-weight: bold; border-radius: 8px; cursor: pointer; margin-top: 10px; }
+        button:hover { background: #778da9; }
+        .result-box { margin-top: 25px; display: none; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; background: #415a77; border-radius: 8px; overflow: hidden; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #1b263b; }
+        th { background: #1b263b; color: #e0e1dd; }
+        .eligible { color: #52b788; font-weight: bold; }
+        .expired { color: #e63946; font-weight: bold; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h2>Defense Attempt Calculator</h2>
+    <h2>Defense Academy Attempt Tracker</h2>
     
-    <label for="dob">Enter Date of Birth:</label>
-    <input type="date" id="dob" required>
+    <div class="input-group">
+        <label>Your Date of Birth:</label>
+        <input type="date" id="dob" required>
+    </div>
 
-    <label for="category">Category:</label>
-    <select id="category">
-        <option value="General">General / EWS</option>
-        <option value="OBC">OBC</option>
-        <option value="SC/ST">SC / ST</option>
-    </select>
+    <div class="input-group">
+        <label>Category (For CAPF Only):</label>
+        <select id="category">
+            <option value="0">General / EWS</option>
+            <option value="3">OBC (+3 Years)</option>
+            <option value="5">SC/ST (+5 Years)</option>
+        </select>
+    </div>
 
-    <button onclick="calculateAttempts()">Calculate Remaining Attempts</button>
+    <button onclick="calculate()">Check My Eligibility</button>
 
-    <div id="results" class="results">
-        <h3>Your Estimated Remaining Attempts:</h3>
-        <div id="examList"></div>
-        <p style="font-size: 12px; color: #666; margin-top: 20px;">*Note: Calculations are based on standard age limits. Always check the official UPSC/IAF notification for specific cycle cut-off dates.</p>
+    <div id="resultBox" class="result-box">
+        <h3>Academy-Wise Remaining Attempts</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Academy/Exam</th>
+                    <th>Max Age</th>
+                    <th>Attempts Left</th>
+                </tr>
+            </thead>
+            <tbody id="examTableBody"></tbody>
+        </table>
+        <p style="font-size: 11px; margin-top: 15px; color: #778da9;">*Calculated based on "Date of Joining" (Jan 1 / July 1) as per official UPSC/IAF norms.</p>
     </div>
 </div>
 
 <script>
-    function calculateAttempts() {
-        const dobValue = document.getElementById('dob').value;
-        if (!dobValue) { alert("Please enter your DOB"); return; }
-
-        const dob = new Date(dobValue);
-        const today = new Date("2025-12-20"); // Using current system date from prompt
-        const resultsDiv = document.getElementById('results');
-        const examList = document.getElementById('examList');
+    function calculate() {
+        const dobInput = document.getElementById('dob').value;
+        if(!dobInput) return alert("Please select DOB");
         
-        examList.innerHTML = "";
-        resultsDiv.style.display = "block";
-
-        const age = (today - dob) / (1000 * 60 * 60 * 24 * 365.25);
-        const category = document.getElementById('category').value;
+        const dob = new Date(dobInput);
+        const resultBox = document.getElementById('resultBox');
+        const tableBody = document.getElementById('examTableBody');
+        tableBody.innerHTML = "";
+        resultBox.style.display = "block";
 
         const exams = [
-            { name: "NDA (National Defence Academy)", limit: 19.5, freq: 2 },
-            { name: "CDS - IMA/INA (Army/Navy)", limit: 24, freq: 2 },
-            { name: "CDS - AFA (Air Force)", limit: 24, freq: 2 },
-            { name: "CDS - OTA (Men/Women)", limit: 25, freq: 2 },
-            { name: "AFCAT (Flying Branch)", limit: 24, freq: 2 },
-            { name: "AFCAT (Ground Duty)", limit: 26, freq: 2 },
-            { name: "CAPF AC (Assistant Commandant)", limit: 25, freq: 1 }
+            { name: "NDA", max: 19.5, type: "cycle" },
+            { name: "CDS (IMA/INA)", max: 24, type: "cycle" },
+            { name: "CDS (AFA)", max: 24, type: "cycle" },
+            { name: "CDS (OTA)", max: 25, type: "cycle" },
+            { name: "AFCAT (Flying)", max: 24, type: "cycle" },
+            { name: "AFCAT (Ground)", max: 26, type: "cycle" },
+            { name: "CAPF AC", max: 25, type: "yearly" }
         ];
 
+        const categoryBonus = parseInt(document.getElementById('category').value);
+
         exams.forEach(exam => {
-            let limit = exam.limit;
-            
-            // Apply CAPF Relaxations
-            if (exam.name.includes("CAPF")) {
-                if (category === "OBC") limit += 3;
-                if (category === "SC/ST") limit += 5;
+            let attempts = 0;
+            let currentYear = 2026; // Checking for future attempts from 2026 onwards
+
+            // Loop through next 10 years to find valid cycles
+            for (let year = currentYear; year < currentYear + 10; year++) {
+                if (exam.type === "cycle") {
+                    // Check Cycle 1 (Joining Jan 1 of Year + 1)
+                    let doj1 = new Date(year + 1, 0, 1);
+                    if (getAge(dob, doj1) < exam.max && getAge(dob, doj1) >= 16.5) attempts++;
+
+                    // Check Cycle 2 (Joining July 1 of Year + 1)
+                    let doj2 = new Date(year + 1, 6, 1);
+                    if (getAge(dob, doj2) < exam.max && getAge(dob, doj2) >= 16.5) attempts++;
+                } else {
+                    // CAPF Logic (Joining usually based on Aug 1st of Exam Year)
+                    let doj = new Date(year, 7, 1);
+                    if (getAge(dob, doj) < (exam.max + categoryBonus)) attempts++;
+                }
             }
 
-            let remainingYears = limit - age;
-            let attempts = Math.floor(remainingYears * exam.freq);
-            
-            if (attempts < 0) attempts = 0;
-
-            const card = document.createElement('div');
-            card.className = 'exam-card';
-            const statusClass = attempts > 0 ? 'eligible' : '';
-            
-            card.innerHTML = `
-                <span class="exam-name">${exam.name}</span>
-                <span class="attempts ${statusClass}">${attempts} Attempts</span>
-            `;
-            examList.appendChild(card);
+            const row = `<tr>
+                <td>${exam.name}</td>
+                <td>${exam.name === 'CAPF AC' ? exam.max + categoryBonus : exam.max}</td>
+                <td class="${attempts > 0 ? 'eligible' : 'expired'}">${attempts}</td>
+            </tr>`;
+            tableBody.innerHTML += row;
         });
     }
-</script>
 
+    function getAge(birthDate, nowDate) {
+        let age = nowDate.getFullYear() - birthDate.getFullYear();
+        let m = nowDate.getMonth() - birthDate.getMonth();
+        if (m < 0 || (m === 0 && nowDate.getDate() < birthDate.getDate())) {
+            age--;
+        }
+        // Return fractional age for NDA's 19.5 limit
+        let diff = nowDate.getTime() - birthDate.getTime();
+        return diff / (1000 * 60 * 60 * 24 * 365.25);
+    }
+</script>
 </body>
 </html>
