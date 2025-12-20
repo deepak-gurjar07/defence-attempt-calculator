@@ -3,36 +3,37 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Defense Exam Accurate Attempt Calculator</title>
+    <title>Defense Attempt Detailed Tracker</title>
     <style>
-        body { font-family: 'Segoe UI', sans-serif; background-color: #0d1b2a; color: #e0e1dd; display: flex; justify-content: center; padding: 20px; }
-        .container { background: #1b263b; padding: 30px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); max-width: 700px; width: 100%; }
-        h2 { color: #e0e1dd; text-align: center; border-bottom: 2px solid #415a77; padding-bottom: 10px; }
-        .input-group { margin-bottom: 15px; }
-        label { display: block; margin-bottom: 5px; font-size: 14px; color: #778da9; }
-        input, select { width: 100%; padding: 12px; background: #0d1b2a; border: 1px solid #415a77; color: white; border-radius: 8px; }
-        button { width: 100%; padding: 15px; background: #e0e1dd; color: #0d1b2a; border: none; font-weight: bold; border-radius: 8px; cursor: pointer; margin-top: 10px; }
-        button:hover { background: #778da9; }
-        .result-box { margin-top: 25px; display: none; }
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; background: #415a77; border-radius: 8px; overflow: hidden; }
-        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #1b263b; }
-        th { background: #1b263b; color: #e0e1dd; }
-        .eligible { color: #52b788; font-weight: bold; }
-        .expired { color: #e63946; font-weight: bold; }
+        :root { --primary: #1a2a6c; --secondary: #b21f1f; --bg: #f5f7fa; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--bg); display: flex; justify-content: center; padding: 20px; }
+        .card { background: white; padding: 30px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); max-width: 800px; width: 100%; }
+        h2 { color: var(--primary); text-align: center; border-bottom: 3px solid var(--secondary); display: inline-block; width: 100%; padding-bottom: 10px; }
+        .form-group { margin: 20px 0; }
+        label { font-weight: 600; color: #333; }
+        input, select { width: 100%; padding: 12px; margin-top: 8px; border: 2px solid #ddd; border-radius: 8px; font-size: 16px; }
+        button { width: 100%; padding: 15px; background: var(--primary); color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.3s; font-size: 16px; }
+        button:hover { background: var(--secondary); }
+        .results { margin-top: 30px; }
+        .exam-section { margin-bottom: 25px; border: 1px solid #eee; border-radius: 10px; padding: 15px; background: #fff; }
+        .exam-header { font-size: 18px; font-weight: bold; color: var(--primary); border-bottom: 1px solid #eee; padding-bottom: 5px; margin-bottom: 10px; display: flex; justify-content: space-between; }
+        .attempt-tag { font-size: 13px; padding: 4px 10px; background: #e8f5e9; color: #2e7d32; border-radius: 20px; margin: 3px; display: inline-block; }
+        .expired-tag { background: #ffebee; color: #c62828; }
+        .total-badge { background: var(--secondary); color: white; padding: 2px 10px; border-radius: 5px; font-size: 14px; }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <h2>Defense Academy Attempt Tracker</h2>
+<div class="card">
+    <h2>Defense Exam Attempt List</h2>
     
-    <div class="input-group">
-        <label>Your Date of Birth:</label>
-        <input type="date" id="dob" required>
+    <div class="form-group">
+        <label>Select Date of Birth:</label>
+        <input type="date" id="dob" value="2003-01-01">
     </div>
 
-    <div class="input-group">
-        <label>Category (For CAPF Only):</label>
+    <div class="form-group">
+        <label>Category (For CAPF Relaxation):</label>
         <select id="category">
             <option value="0">General / EWS</option>
             <option value="3">OBC (+3 Years)</option>
@@ -40,87 +41,78 @@
         </select>
     </div>
 
-    <button onclick="calculate()">Check My Eligibility</button>
+    <button onclick="generateAttempts()">Calculate My Timeline</button>
 
-    <div id="resultBox" class="result-box">
-        <h3>Academy-Wise Remaining Attempts</h3>
-        <table>
-            <thead>
-                <tr>
-                    <th>Academy/Exam</th>
-                    <th>Max Age</th>
-                    <th>Attempts Left</th>
-                </tr>
-            </thead>
-            <tbody id="examTableBody"></tbody>
-        </table>
-        <p style="font-size: 11px; margin-top: 15px; color: #778da9;">*Calculated based on "Date of Joining" (Jan 1 / July 1) as per official UPSC/IAF norms.</p>
-    </div>
+    <div id="results" class="results"></div>
 </div>
 
 <script>
-    function calculate() {
-        const dobInput = document.getElementById('dob').value;
-        if(!dobInput) return alert("Please select DOB");
-        
-        const dob = new Date(dobInput);
-        const resultBox = document.getElementById('resultBox');
-        const tableBody = document.getElementById('examTableBody');
-        tableBody.innerHTML = "";
-        resultBox.style.display = "block";
+    function generateAttempts() {
+        const dobVal = document.getElementById('dob').value;
+        if(!dobVal) return;
+        const dob = new Date(dobVal);
+        const categoryBonus = parseInt(document.getElementById('category').value);
+        const resultsDiv = document.getElementById('results');
+        resultsDiv.innerHTML = "";
 
         const exams = [
-            { name: "NDA", max: 19.5, type: "cycle" },
-            { name: "CDS (IMA/INA)", max: 24, type: "cycle" },
-            { name: "CDS (AFA)", max: 24, type: "cycle" },
-            { name: "CDS (OTA)", max: 25, type: "cycle" },
-            { name: "AFCAT (Flying)", max: 24, type: "cycle" },
-            { name: "AFCAT (Ground)", max: 26, type: "cycle" },
-            { name: "CAPF AC", max: 25, type: "yearly" }
+            { name: "NDA", min: 16.5, max: 19.5, freq: 2 },
+            { name: "CDS (IMA/INA)", min: 19, max: 24, freq: 2 },
+            { name: "CDS (AFA)", min: 20, max: 24, freq: 2 },
+            { name: "CDS (OTA)", min: 19, max: 25, freq: 2 },
+            { name: "AFCAT (Flying)", min: 20, max: 24, freq: 2 },
+            { name: "AFCAT (Ground Duty)", min: 20, max: 26, freq: 2 },
+            { name: "CAPF (Assistant Commandant)", min: 20, max: 25 + categoryBonus, freq: 1 }
         ];
 
-        const categoryBonus = parseInt(document.getElementById('category').value);
-
         exams.forEach(exam => {
-            let attempts = 0;
-            let currentYear = 2026; // Checking for future attempts from 2026 onwards
-
-            // Loop through next 10 years to find valid cycles
-            for (let year = currentYear; year < currentYear + 10; year++) {
-                if (exam.type === "cycle") {
-                    // Check Cycle 1 (Joining Jan 1 of Year + 1)
-                    let doj1 = new Date(year + 1, 0, 1);
-                    if (getAge(dob, doj1) < exam.max && getAge(dob, doj1) >= 16.5) attempts++;
-
-                    // Check Cycle 2 (Joining July 1 of Year + 1)
-                    let doj2 = new Date(year + 1, 6, 1);
-                    if (getAge(dob, doj2) < exam.max && getAge(dob, doj2) >= 16.5) attempts++;
+            let attemptList = [];
+            // We check for cycles from 2026 to 2035
+            for (let year = 2026; year <= 2035; year++) {
+                if (exam.freq === 2) {
+                    // Cycle 1: Joins Jan 1 of Year+1
+                    const doj1 = new Date(year + 1, 0, 1);
+                    if (isValid(dob, doj1, exam.min, exam.max)) {
+                        attemptList.push(`${exam.name} I - ${year} (DOJ: Jan ${year + 1})`);
+                    }
+                    // Cycle 2: Joins July 1 of Year+1
+                    const doj2 = new Date(year + 1, 6, 1);
+                    if (isValid(dob, doj2, exam.min, exam.max)) {
+                        attemptList.push(`${exam.name} II - ${year} (DOJ: July ${year + 1})`);
+                    }
                 } else {
-                    // CAPF Logic (Joining usually based on Aug 1st of Exam Year)
-                    let doj = new Date(year, 7, 1);
-                    if (getAge(dob, doj) < (exam.max + categoryBonus)) attempts++;
+                    // CAPF: Age as of Aug 1st of Exam Year
+                    const doj = new Date(year, 7, 1);
+                    if (isValid(dob, doj, exam.min, exam.max)) {
+                        attemptList.push(`CAPF AC ${year} (Ref: Aug ${year})`);
+                    }
                 }
             }
 
-            const row = `<tr>
-                <td>${exam.name}</td>
-                <td>${exam.name === 'CAPF AC' ? exam.max + categoryBonus : exam.max}</td>
-                <td class="${attempts > 0 ? 'eligible' : 'expired'}">${attempts}</td>
-            </tr>`;
-            tableBody.innerHTML += row;
+            // Render Exam Section
+            const section = document.createElement('div');
+            section.className = 'exam-section';
+            
+            let attemptsHtml = attemptList.length > 0 
+                ? attemptList.map(a => `<span class="attempt-tag">${a}</span>`).join('')
+                : `<span class="attempt-tag expired-tag">No attempts remaining based on age</span>`;
+
+            section.innerHTML = `
+                <div class="exam-header">
+                    ${exam.name} 
+                    <span class="total-badge">${attemptList.length} Left</span>
+                </div>
+                <div class="attempt-container">${attemptsHtml}</div>
+            `;
+            resultsDiv.appendChild(section);
         });
     }
 
-    function getAge(birthDate, nowDate) {
-        let age = nowDate.getFullYear() - birthDate.getFullYear();
-        let m = nowDate.getMonth() - birthDate.getMonth();
-        if (m < 0 || (m === 0 && nowDate.getDate() < birthDate.getDate())) {
-            age--;
-        }
-        // Return fractional age for NDA's 19.5 limit
-        let diff = nowDate.getTime() - birthDate.getTime();
-        return diff / (1000 * 60 * 60 * 24 * 365.25);
+    function isValid(dob, doj, min, max) {
+        let age = (doj - dob) / (1000 * 60 * 60 * 24 * 365.25);
+        return age >= min && age < max;
     }
 </script>
+
 </body>
 </html>
