@@ -3,24 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Defense Timeline Tracker</title>
+    <title>Defense Exam Ultimate Tracker</title>
     <style>
-        /* --- CSS Variables --- */
         :root {
-            --primary: #1e3a8a; /* Navy Blue */
-            --accent: #dc2626; /* Red */
-            --bg: #f3f4f6;
+            --primary: #0f172a;
+            --accent: #2563eb;
+            --bg: #f8fafc;
             --card-bg: #ffffff;
-            --past-bg: #e5e7eb; --past-text: #6b7280;
-            --future-bg: #dcfce7; --future-text: #15803d;
+            --past-bg: #e2e8f0; --past-text: #64748b;
+            --future-bg: #dcfce7; --future-text: #166534;
+            --border: #e2e8f0;
         }
 
-        /* --- Base Styles --- */
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             background-color: var(--bg);
             margin: 0;
-            padding: 20px;
+            padding: 15px;
             display: flex;
             justify-content: center;
             min-height: 100vh;
@@ -30,45 +29,54 @@
             background-color: var(--card-bg);
             width: 100%;
             max-width: 600px;
-            border-radius: 12px;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-            padding: 20px;
+            border-radius: 16px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            padding: 24px;
             box-sizing: border-box;
         }
 
         h1 {
             text-align: center;
             color: var(--primary);
-            font-size: 24px;
-            margin-bottom: 20px;
-            border-bottom: 2px solid var(--bg);
-            padding-bottom: 10px;
+            font-size: 22px;
+            margin: 0 0 20px 0;
+            font-weight: 800;
         }
 
-        /* --- Controls --- */
         .controls {
             display: flex;
             flex-direction: column;
             gap: 15px;
             margin-bottom: 25px;
+            background: #f1f5f9;
+            padding: 15px;
+            border-radius: 12px;
         }
 
         label {
             font-weight: 600;
-            font-size: 14px;
-            color: #374151;
-            margin-bottom: 5px;
+            font-size: 13px;
+            color: #475569;
+            margin-bottom: 6px;
             display: block;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
         input[type="date"], select {
             width: 100%;
             padding: 12px;
-            border: 1px solid #d1d5db;
+            border: 1px solid #cbd5e1;
             border-radius: 8px;
             font-size: 16px;
             background: #fff;
             box-sizing: border-box; 
+            outline: none;
+        }
+        
+        input[type="date"]:focus, select:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1);
         }
 
         button {
@@ -76,21 +84,20 @@
             padding: 14px;
             background-color: var(--primary);
             color: white;
-            font-weight: bold;
+            font-weight: 700;
             border: none;
             border-radius: 8px;
             font-size: 16px;
             cursor: pointer;
-            transition: background 0.2s;
+            transition: transform 0.1s, opacity 0.2s;
         }
-        button:hover { background-color: #1e40af; }
+        button:active { transform: scale(0.98); }
 
-        /* --- Results --- */
         .exam-card {
-            border: 1px solid #e5e7eb;
-            border-radius: 8px;
-            padding: 15px;
-            margin-bottom: 20px;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 16px;
             background: white;
         }
 
@@ -99,22 +106,23 @@
             justify-content: space-between;
             align-items: center;
             margin-bottom: 12px;
-            border-bottom: 1px solid #f3f4f6;
-            padding-bottom: 8px;
+            border-bottom: 1px solid var(--bg);
+            padding-bottom: 10px;
         }
 
         .exam-title {
-            font-weight: 800;
+            font-weight: 700;
             color: var(--primary);
-            font-size: 17px;
+            font-size: 16px;
         }
 
         .count-badge {
-            font-size: 12px;
+            font-size: 11px;
             background: var(--primary);
             color: white;
-            padding: 4px 8px;
-            border-radius: 12px;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-weight: 600;
         }
 
         .timeline-grid {
@@ -126,8 +134,8 @@
         .attempt-pill {
             font-size: 13px;
             padding: 6px 12px;
-            border-radius: 20px;
-            font-weight: 500;
+            border-radius: 6px;
+            font-weight: 600;
             display: inline-block;
         }
 
@@ -141,14 +149,21 @@
             background-color: var(--future-bg);
             color: var(--future-text);
             border: 1px solid #86efac;
-            font-weight: 700;
+        }
+        
+        .disclaimer {
+            font-size: 12px;
+            color: #64748b;
+            text-align: center;
+            margin-top: 20px;
+            line-height: 1.5;
         }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h1>Defense Timeline Tracker</h1>
+    <h1>Defense Attempt Tracker</h1>
     
     <div class="controls">
         <div>
@@ -157,7 +172,7 @@
         </div>
 
         <div>
-            <label>Category (For CAPF/ICG Relaxation)</label>
+            <label>Category (Only for CAPF & ICG)</label>
             <select id="category">
                 <option value="0">General / EWS</option>
                 <option value="3">OBC (+3 Years)</option>
@@ -165,10 +180,15 @@
             </select>
         </div>
 
-        <button onclick="calculateAttempts()">Show Full History</button>
+        <button onclick="calculateAttempts()">Calculate Eligibility</button>
     </div>
 
     <div id="results"></div>
+    
+    <div class="disclaimer">
+        Note: NDA, CDS & AFCAT do not have caste-based age relaxation. <br>
+        Calculations are based on standard 'Age at Joining' or 'Age at Exam' criteria.
+    </div>
 </div>
 
 <script>
@@ -183,43 +203,53 @@
         
         resultsDiv.innerHTML = ""; 
 
-        // --- EXAM CONFIGURATION ---
+        // --- EXAM LOGIC ---
+        // isRelaxable: true = Adds OBC/SC/ST years. false = Stays Fixed.
+        // refMode: 'next_year' (Jan/July next year) OR 'current_year' (Aug current year for CAPF)
+        
         const exams = [
-            { name: "NDA", min: 15.7, max: 18.7, freq: 2, month1: 3, month2: 8 },
-            { name: "CDS (IMA/INA)", min: 19, max: 24, freq: 2, month1: 3, month2: 8 },
-            { name: "CDS (AFA)", min: 19, max: 24, freq: 2, month1: 3, month2: 8 },
-            { name: "CDS (OTA)", min: 19, max: 25, freq: 2, month1: 3, month2: 8 },
-            
-            // Flying Branch (Strict 20-24)
-            { name: "AFCAT (Flying)", min: 20, max: 24, freq: 2, month1: 1, month2: 7 },
-            
-            // Ground Duty (Standard 20-26, usually no caste relaxation, but higher limit)
-            { name: "AFCAT (Ground Duty)", min: 20, max: 26, freq: 2, month1: 1, month2: 7 },
-            
-            // ICG uses relaxations (OBC+3, SC/ST+5)
-            { name: "ICG AC (GD/Tech)", min: 21, max: 25 + categoryBonus, freq: 2, month1: 2, month2: 9 },
-            
-            // CAPF uses relaxations
-            { name: "CAPF AC", min: 20, max: 25 + categoryBonus, freq: 1, month1: 7 }
+            { name: "NDA", min: 16.5, max: 19.5, freq: 2, isRelaxable: false, refMode: 'next_year' },
+            { name: "CDS (IMA/INA)", min: 19, max: 24, freq: 2, isRelaxable: false, refMode: 'next_year' },
+            { name: "CDS (AFA)", min: 20, max: 24, freq: 2, isRelaxable: false, refMode: 'next_year' }, // Min age 20
+            { name: "CDS (OTA)", min: 19, max: 25, freq: 2, isRelaxable: false, refMode: 'next_year' },
+            { name: "AFCAT (Flying)", min: 20, max: 24, freq: 2, isRelaxable: false, refMode: 'next_year' },
+            { name: "AFCAT (Ground Duty)", min: 20, max: 26, freq: 2, isRelaxable: false, refMode: 'next_year' },
+            { name: "ICG AC (GD/Tech)", min: 21, max: 25, freq: 2, isRelaxable: true, refMode: 'next_year' }, // Has Relaxation
+            { name: "CAPF AC", min: 20, max: 25, freq: 1, isRelaxable: true, refMode: 'current_year' } // Has Relaxation & different Ref Date
         ];
 
-        // Search range: Age 15 to 32
+        // Search window: Age 15 to 33
         const startYear = dob.getFullYear() + 15; 
-        const endYear = dob.getFullYear() + 32;
+        const endYear = dob.getFullYear() + 33;
 
         exams.forEach(exam => {
             let htmlContent = "";
             let attemptsLeft = 0;
+            
+            // Apply Relaxation if allowed
+            let maxAge = exam.max;
+            if (exam.isRelaxable) {
+                maxAge += categoryBonus;
+            }
 
             for (let year = startYear; year <= endYear; year++) {
                 
-                // --- Cycle 1 (e.g., Exam in Feb/April) ---
+                // --- Cycle 1 ---
                 if (exam.freq >= 1) {
-                    let refDate1 = new Date(year + 1, 0, 1); // Age ref: Jan 1 next year
-                    let examDate1 = new Date(year, exam.month1, 15); // Approx exam date
+                    let refDate, examDate;
 
-                    if (checkAge(dob, refDate1, exam.min, exam.max)) {
-                        let status = (examDate1 < today) ? "status-past" : "status-future";
+                    if (exam.refMode === 'next_year') {
+                        // Standard: Age checked on Jan 1 of NEXT year
+                        refDate = new Date(year + 1, 0, 1); 
+                        examDate = new Date(year, 3, 15); // Approx April
+                    } else {
+                        // CAPF: Age checked on Aug 1 of CURRENT year
+                        refDate = new Date(year, 7, 1);
+                        examDate = new Date(year, 7, 5); // Approx August
+                    }
+
+                    if (checkAge(dob, refDate, exam.min, maxAge)) {
+                        let status = (examDate < today) ? "status-past" : "status-future";
                         if (status === "status-future") attemptsLeft++;
                         
                         let label = exam.freq === 1 ? `${year}` : `${year} - I`;
@@ -227,12 +257,13 @@
                     }
                 }
 
-                // --- Cycle 2 (e.g., Exam in Aug/Sept) ---
+                // --- Cycle 2 (Only for exams with freq 2) ---
                 if (exam.freq === 2) {
-                    let refDate2 = new Date(year + 1, 6, 1); // Age ref: July 1 next year
-                    let examDate2 = new Date(year, exam.month2, 15); // Approx exam date
+                    // Cycle 2 is always standard "Next Year July" reference logic
+                    let refDate2 = new Date(year + 1, 6, 1); // July 1 next year
+                    let examDate2 = new Date(year, 8, 15); // Approx Sept
 
-                    if (checkAge(dob, refDate2, exam.min, exam.max)) {
+                    if (checkAge(dob, refDate2, exam.min, maxAge)) {
                         let status = (examDate2 < today) ? "status-past" : "status-future";
                         if (status === "status-future") attemptsLeft++;
 
@@ -258,16 +289,19 @@
         });
 
         if (resultsDiv.innerHTML === "") {
-            resultsDiv.innerHTML = "<p style='text-align:center; color:#666;'>No eligible exams found.</p>";
+            resultsDiv.innerHTML = "<p style='text-align:center; color:#666; margin-top:20px;'>No eligible exams found.</p>";
         }
     }
 
     function checkAge(dob, refDate, minAge, maxAge) {
+        // Precise calculation
         const diffTime = Math.abs(refDate - dob);
         const diffYears = diffTime / (1000 * 60 * 60 * 24 * 365.25);
+        // Using strict inequalities matching UPSC standards
         return diffYears >= minAge && diffYears < maxAge;
     }
     
+    // Auto-run
     window.onload = calculateAttempts;
 </script>
 
