@@ -1,264 +1,245 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Defense Attempt Tracker</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Defense Attempt Tracker</title>
 
-    <style>
-        :root {
-            --primary: #0f172a;
-            --accent: #2563eb;
-            --bg: #f8fafc;
-            --card-bg: #ffffff;
-            --past-bg: #e2e8f0; 
-            --past-text: #64748b;
-            --future-bg: #dcfce7; 
-            --future-text: #166534;
-            --border: #e2e8f0;
-        }
-
-        body {
-            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto;
-            background-color: var(--bg);
-            margin: 0;
-            padding: 15px;
-            display: flex;
-            justify-content: center;
-            min-height: 100vh;
-        }
-
-        .container {
-            background-color: var(--card-bg);
-            width: 100%;
-            max-width: 600px;
-            border-radius: 16px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-            padding: 24px;
-        }
-
-        h1 {
-            text-align: center;
-            font-size: 22px;
-            margin-bottom: 20px;
-        }
-
-        .controls {
-            background: #f1f5f9;
-            padding: 15px;
-            border-radius: 12px;
-            margin-bottom: 25px;
-        }
-
-        label {
-            font-size: 12px;
-            font-weight: 600;
-            color: #475569;
-            display: block;
-            margin-bottom: 6px;
-            text-transform: uppercase;
-        }
-
-        input, select, button {
-            width: 100%;
-            padding: 12px;
-            margin-bottom: 12px;
-            font-size: 15px;
-            border-radius: 8px;
-            border: 1px solid #cbd5e1;
-        }
-
-        button {
-            background: var(--primary);
-            color: white;
-            font-weight: 700;
-            cursor: pointer;
-            border: none;
-        }
-
-        .exam-card {
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 16px;
-            margin-bottom: 16px;
-        }
-
-        .exam-header {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 10px;
-        }
-
-        .count-badge {
-            background: var(--primary);
-            color: white;
-            font-size: 11px;
-            padding: 4px 10px;
-            border-radius: 20px;
-        }
-
-        .timeline-grid {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-        }
-
-        .attempt-pill {
-            padding: 6px 12px;
-            border-radius: 6px;
-            font-size: 13px;
-            font-weight: 600;
-        }
-
-        .status-past {
-            background: var(--past-bg);
-            color: var(--past-text);
-            text-decoration: line-through;
-        }
-
-        .status-future {
-            background: var(--future-bg);
-            color: var(--future-text);
-            border: 1px solid #86efac;
-        }
-
-        .disclaimer {
-            font-size: 12px;
-            color: #64748b;
-            text-align: center;
-            margin-top: 20px;
-        }
-    </style>
+<style>
+:root {
+    --primary:#0f172a;
+    --accent:#2563eb;
+    --bg:#f8fafc;
+    --card-bg:#ffffff;
+    --past-bg:#e2e8f0;
+    --past-text:#64748b;
+    --future-bg:#dcfce7;
+    --future-text:#166534;
+    --border:#e2e8f0;
+}
+body{
+    font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto;
+    background:var(--bg);
+    margin:0;
+    padding:15px;
+    display:flex;
+    justify-content:center;
+    min-height:100vh;
+}
+.container{
+    background:var(--card-bg);
+    width:100%;
+    max-width:600px;
+    border-radius:16px;
+    box-shadow:0 4px 6px rgba(0,0,0,.05);
+    padding:24px;
+}
+h1{text-align:center;font-size:22px;margin-bottom:20px;}
+.controls{
+    background:#f1f5f9;
+    padding:15px;
+    border-radius:12px;
+    margin-bottom:25px;
+}
+label{
+    font-size:12px;
+    font-weight:600;
+    color:#475569;
+    display:block;
+    margin-bottom:6px;
+    text-transform:uppercase;
+}
+input,select,button{
+    width:100%;
+    padding:12px;
+    margin-bottom:12px;
+    font-size:15px;
+    border-radius:8px;
+    border:1px solid #cbd5e1;
+}
+button{
+    background:var(--primary);
+    color:#fff;
+    font-weight:700;
+    border:none;
+    cursor:pointer;
+}
+.exam-card{
+    border:1px solid var(--border);
+    border-radius:12px;
+    padding:16px;
+    margin-bottom:16px;
+}
+.exam-header{
+    display:flex;
+    justify-content:space-between;
+    margin-bottom:10px;
+}
+.count-badge{
+    background:var(--primary);
+    color:#fff;
+    font-size:11px;
+    padding:4px 10px;
+    border-radius:20px;
+}
+.timeline-grid{
+    display:flex;
+    flex-wrap:wrap;
+    gap:8px;
+}
+.attempt-pill{
+    padding:6px 12px;
+    border-radius:6px;
+    font-size:13px;
+    font-weight:600;
+}
+.status-past{
+    background:var(--past-bg);
+    color:var(--past-text);
+    text-decoration:line-through;
+}
+.status-future{
+    background:var(--future-bg);
+    color:var(--future-text);
+    border:1px solid #86efac;
+}
+.disclaimer{
+    font-size:12px;
+    color:#64748b;
+    text-align:center;
+    margin-top:20px;
+}
+</style>
 </head>
 
 <body>
-
 <div class="container">
-    <h1>Defense Attempt Tracker</h1>
+<h1>Defense Attempt Tracker</h1>
 
-    <div class="controls">
-        <label>Date of Birth</label>
-        <input type="date" id="dob" value="2003-01-01">
+<div class="controls">
+<label>Date of Birth</label>
+<input type="date" id="dob" value="2003-01-01">
 
-        <label>Category (Only for CAPF & ICG)</label>
-        <select id="category">
-            <option value="0">General / EWS</option>
-            <option value="3">OBC (+3 Years)</option>
-            <option value="5">SC/ST (+5 Years)</option>
-        </select>
+<label>Category (Only for CAPF & ICG)</label>
+<select id="category">
+<option value="0">General / EWS</option>
+<option value="3">OBC (+3 Years)</option>
+<option value="5">SC/ST (+5 Years)</option>
+</select>
 
-        <button onclick="calculateAttempts()">Calculate Eligibility</button>
-    </div>
+<button onclick="calculateAttempts()">Calculate Eligibility</button>
+</div>
 
-    <div id="results"></div>
+<div id="results"></div>
 
-    <div class="disclaimer">
-        Note: NDA, CDS & AFCAT do not have caste-based age relaxation.<br>
-        Calculations are based on standard "Age at Joining" or "Age at Exam" criteria.
-    </div>
+<div class="disclaimer">
+Note: NDA, CDS & AFCAT do not have caste-based age relaxation.<br>
+Calculations are based on standard "Age at Joining" or "Age at Exam" criteria.
+</div>
 </div>
 
 <script>
-function checkAge(dob, refDate, minAge, maxAge) {
-    const years = (refDate - dob) / (1000 * 60 * 60 * 24 * 365.25);
-    return years >= minAge && years < maxAge;
+// ---------- AGE CHECK ----------
+function checkAge(dob, refDate, minAge, maxAge){
+    const years=(refDate-dob)/(1000*60*60*24*365.25);
+    return years>=minAge && years<maxAge;
 }
 
-function isEligible(exam, dob, refDate, categoryBonus) {
+// ---------- ELIGIBILITY RESOLVER ----------
+function isEligible(exam,dob,refDate,categoryBonus){
 
-    // NDA — DOB window logic
-    if (exam.mode === "dob-window") {
-        const t = dob.getTime();
-        return t >= exam.start && t <= exam.end;
+    // NDA – DOB WINDOW PER CYCLE (FIX)
+    if(exam.mode==="dob-window"){
+        const latestDOB=new Date(refDate);
+        latestDOB.setFullYear(latestDOB.getFullYear()-16);
+        latestDOB.setDate(latestDOB.getDate()-1);
+
+        const earliestDOB=new Date(refDate);
+        earliestDOB.setFullYear(earliestDOB.getFullYear()-19);
+        earliestDOB.setDate(earliestDOB.getDate()+1);
+
+        return dob>=earliestDOB && dob<=latestDOB;
     }
 
-    // Other exams — age based
-    let maxAge = exam.max;
-    if (exam.isRelaxable) maxAge += categoryBonus;
-
-    return checkAge(dob, refDate, exam.min, maxAge);
+    // Other exams – age based
+    let maxAge=exam.max;
+    if(exam.isRelaxable) maxAge+=categoryBonus;
+    return checkAge(dob,refDate,exam.min,maxAge);
 }
 
-function calculateAttempts() {
+// ---------- MAIN ----------
+function calculateAttempts(){
 
-    const dob = new Date(document.getElementById("dob").value);
-    const categoryBonus = parseInt(document.getElementById("category").value);
-    const today = new Date();
-    const results = document.getElementById("results");
-    results.innerHTML = "";
+const dob=new Date(document.getElementById("dob").value);
+const categoryBonus=parseInt(document.getElementById("category").value);
+const today=new Date();
+const results=document.getElementById("results");
+results.innerHTML="";
 
-    const exams = [
-        {
-            name: "NDA",
-            mode: "dob-window",
-            freq: 2,
-            start: new Date("2007-07-02").getTime(),
-            end:   new Date("2010-07-01").getTime()
-        },
-        { name: "CDS (IMA/INA)", min: 19, max: 24, freq: 2, isRelaxable: false, refMode: "next_year" },
-        { name: "CDS (AFA)", min: 20, max: 24, freq: 2, isRelaxable: false, refMode: "next_year" },
-        { name: "CDS (OTA)", min: 19, max: 25, freq: 2, isRelaxable: false, refMode: "next_year" },
-        { name: "AFCAT (Flying)", min: 20, max: 24, freq: 2, isRelaxable: false, refMode: "next_year" },
-        { name: "AFCAT (Ground Duty)", min: 20, max: 26, freq: 2, isRelaxable: false, refMode: "next_year" },
-        { name: "ICG AC (GD/Tech)", min: 21, max: 25, freq: 2, isRelaxable: true, refMode: "next_year" },
-        { name: "CAPF AC", min: 20, max: 25, freq: 1, isRelaxable: true, refMode: "current_year" }
-    ];
+const exams=[
+    {name:"NDA",mode:"dob-window",freq:2},
+    {name:"CDS (IMA/INA)",min:19,max:24,freq:2,isRelaxable:false,refMode:"next_year"},
+    {name:"CDS (AFA)",min:20,max:24,freq:2,isRelaxable:false,refMode:"next_year"},
+    {name:"CDS (OTA)",min:19,max:25,freq:2,isRelaxable:false,refMode:"next_year"},
+    {name:"AFCAT (Flying)",min:20,max:24,freq:2,isRelaxable:false,refMode:"next_year"},
+    {name:"AFCAT (Ground Duty)",min:20,max:26,freq:2,isRelaxable:false,refMode:"next_year"},
+    {name:"ICG AC (GD/Tech)",min:21,max:25,freq:2,isRelaxable:true,refMode:"next_year"},
+    {name:"CAPF AC",min:20,max:25,freq:1,isRelaxable:true,refMode:"current_year"}
+];
 
-    const startYear = dob.getFullYear() + 15;
-    const endYear = dob.getFullYear() + 33;
+const startYear=dob.getFullYear()+15;
+const endYear=dob.getFullYear()+33;
 
-    exams.forEach(exam => {
+exams.forEach(exam=>{
+    let html="";
+    let left=0;
 
-        let html = "";
-        let left = 0;
+    for(let year=startYear;year<=endYear;year++){
 
-        for (let year = startYear; year <= endYear; year++) {
+        // Cycle I
+        let ref1=exam.refMode==="current_year"
+            ? new Date(year,7,1)
+            : new Date(year+1,0,1);
 
-            // Cycle I
-            let ref1 = exam.refMode === "current_year"
-                ? new Date(year, 7, 1)
-                : new Date(year + 1, 0, 1);
+        let exam1=new Date(year,3,15);
 
-            let exam1 = new Date(year, 3, 15);
-
-            if (isEligible(exam, dob, ref1, categoryBonus)) {
-                let cls = exam1 < today ? "status-past" : "status-future";
-                if (cls === "status-future") left++;
-                html += `<span class="attempt-pill ${cls}">${year} - I</span>`;
-            }
-
-            // Cycle II
-            if (exam.freq === 2) {
-                let ref2 = new Date(year + 1, 6, 1);
-                let exam2 = new Date(year, 8, 15);
-
-                if (isEligible(exam, dob, ref2, categoryBonus)) {
-                    let cls = exam2 < today ? "status-past" : "status-future";
-                    if (cls === "status-future") left++;
-                    html += `<span class="attempt-pill ${cls}">${year} - II</span>`;
-                }
-            }
+        if(isEligible(exam,dob,ref1,categoryBonus)){
+            let cls=exam1<today?"status-past":"status-future";
+            if(cls==="status-future") left++;
+            html+=`<span class="attempt-pill ${cls}">${year} - I</span>`;
         }
 
-        if (html) {
-            results.innerHTML += `
-                <div class="exam-card">
-                    <div class="exam-header">
-                        <strong>${exam.name}</strong>
-                        <span class="count-badge">${left} Left</span>
-                    </div>
-                    <div class="timeline-grid">${html}</div>
-                </div>
-            `;
-        }
-    });
+        // Cycle II
+        if(exam.freq===2){
+            let ref2=new Date(year+1,6,1);
+            let exam2=new Date(year,8,15);
 
-    if (!results.innerHTML) {
-        results.innerHTML = "<p style='text-align:center;color:#666'>No eligible exams found.</p>";
+            if(isEligible(exam,dob,ref2,categoryBonus)){
+                let cls=exam2<today?"status-past":"status-future";
+                if(cls==="status-future") left++;
+                html+=`<span class="attempt-pill ${cls}">${year} - II</span>`;
+            }
+        }
     }
+
+    if(html){
+        results.innerHTML+=`
+        <div class="exam-card">
+            <div class="exam-header">
+                <strong>${exam.name}</strong>
+                <span class="count-badge">${left} Left</span>
+            </div>
+            <div class="timeline-grid">${html}</div>
+        </div>`;
+    }
+});
+
+if(!results.innerHTML){
+    results.innerHTML="<p style='text-align:center;color:#666'>No eligible exams found.</p>";
+}
 }
 
-window.onload = calculateAttempts;
+window.onload=calculateAttempts;
 </script>
 
 </body>
