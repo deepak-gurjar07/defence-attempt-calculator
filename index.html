@@ -208,7 +208,11 @@
         // refMode: 'next_year' (Jan/July next year) OR 'current_year' (Aug current year for CAPF)
         
         const exams = [
-            { name: "NDA", min: 16.5, max: 19.5, freq: 2, isRelaxable: false, refMode: 'next_year' },
+            { name: "NDA",
+    mode: "dob-window",
+    freq: 2,
+    dobStart: "2007-07-02", // born NOT earlier than
+    dobEnd:   "2010-07-01"  // born NOT later than},
             { name: "CDS (IMA/INA)", min: 19, max: 24, freq: 2, isRelaxable: false, refMode: 'next_year' },
             { name: "CDS (AFA)", min: 20, max: 24, freq: 2, isRelaxable: false, refMode: 'next_year' }, // Min age 20
             { name: "CDS (OTA)", min: 19, max: 25, freq: 2, isRelaxable: false, refMode: 'next_year' },
@@ -248,7 +252,18 @@
                         examDate = new Date(year, 7, 5); // Approx August
                     }
 
-                    if (checkAge(dob, refDate, exam.min, maxAge)) {
+                    let eligible = false;
+
+if (exam.mode === "dob-window") {
+    const dobTime = dob.getTime();
+    const start = new Date(exam.dobStart).getTime();
+    const end = new Date(exam.dobEnd).getTime();
+    eligible = dobTime >= start && dobTime <= end;
+} else {
+    eligible = checkAge(dob, refDate, exam.min, maxAge);
+}
+
+if (eligible) {
                         let status = (examDate < today) ? "status-past" : "status-future";
                         if (status === "status-future") attemptsLeft++;
                         
@@ -263,7 +278,18 @@
                     let refDate2 = new Date(year + 1, 6, 1); // July 1 next year
                     let examDate2 = new Date(year, 8, 15); // Approx Sept
 
-                    if (checkAge(dob, refDate2, exam.min, maxAge)) {
+                    let eligible2 = false;
+
+if (exam.mode === "dob-window") {
+    const dobTime = dob.getTime();
+    const start = new Date(exam.dobStart).getTime();
+    const end = new Date(exam.dobEnd).getTime();
+    eligible2 = dobTime >= start && dobTime <= end;
+} else {
+    eligible2 = checkAge(dob, refDate2, exam.min, maxAge);
+}
+
+if (eligible2) {
                         let status = (examDate2 < today) ? "status-past" : "status-future";
                         if (status === "status-future") attemptsLeft++;
 
