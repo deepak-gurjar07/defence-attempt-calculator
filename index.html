@@ -2,9 +2,10 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0"> <title>Defense Exam Full Timeline</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Defense Timeline Tracker</title>
     <style>
-        /* --- CSS Variables for easy theming --- */
+        /* --- CSS Variables --- */
         :root {
             --primary: #1e3a8a; /* Navy Blue */
             --accent: #dc2626; /* Red */
@@ -14,7 +15,7 @@
             --future-bg: #dcfce7; --future-text: #15803d;
         }
 
-        /* --- Reset & Base Styles --- */
+        /* --- Base Styles --- */
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             background-color: var(--bg);
@@ -25,15 +26,14 @@
             min-height: 100vh;
         }
 
-        /* --- Main Card Container --- */
         .container {
             background-color: var(--card-bg);
             width: 100%;
-            max-width: 600px; /* Keeps it looking like an app on desktop */
+            max-width: 600px;
             border-radius: 12px;
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
             padding: 20px;
-            box-sizing: border-box; /* Prevents padding from breaking width */
+            box-sizing: border-box;
         }
 
         h1 {
@@ -45,7 +45,7 @@
             padding-bottom: 10px;
         }
 
-        /* --- Input Section --- */
+        /* --- Controls --- */
         .controls {
             display: flex;
             flex-direction: column;
@@ -68,7 +68,7 @@
             border-radius: 8px;
             font-size: 16px;
             background: #fff;
-            box-sizing: border-box; /* Fixes the column layout bug */
+            box-sizing: border-box; 
         }
 
         button {
@@ -83,12 +83,9 @@
             cursor: pointer;
             transition: background 0.2s;
         }
+        button:hover { background-color: #1e40af; }
 
-        button:hover {
-            background-color: #1e40af;
-        }
-
-        /* --- Results Section --- */
+        /* --- Results --- */
         .exam-card {
             border: 1px solid #e5e7eb;
             border-radius: 8px;
@@ -109,7 +106,7 @@
         .exam-title {
             font-weight: 800;
             color: var(--primary);
-            font-size: 18px;
+            font-size: 17px;
         }
 
         .count-badge {
@@ -134,11 +131,10 @@
             display: inline-block;
         }
 
-        /* --- Dynamic Status Colors --- */
         .status-past {
             background-color: var(--past-bg);
             color: var(--past-text);
-            text-decoration: line-through; /* Visual cue for past */
+            text-decoration: line-through; 
         }
 
         .status-future {
@@ -147,13 +143,6 @@
             border: 1px solid #86efac;
             font-weight: 700;
         }
-
-        .no-data {
-            color: var(--accent);
-            font-style: italic;
-            font-size: 14px;
-        }
-
     </style>
 </head>
 <body>
@@ -168,7 +157,7 @@
         </div>
 
         <div>
-            <label>Category (Relaxation)</label>
+            <label>Category (For CAPF/ICG Relaxation)</label>
             <select id="category">
                 <option value="0">General / EWS</option>
                 <option value="3">OBC (+3 Years)</option>
@@ -192,66 +181,66 @@
         const resultsDiv = document.getElementById('results');
         const today = new Date();
         
-        resultsDiv.innerHTML = ""; // Clear previous results
+        resultsDiv.innerHTML = ""; 
 
-        // Defense Exam Database
-        // Note: min/max ages are roughly standard. 
+        // --- EXAM CONFIGURATION ---
         const exams = [
-            { name: "NDA", min: 15.7, max: 18.7, freq: 2, month1: 3, month2: 8 }, // Exam age approx (joining is 16.5-19.5)
+            { name: "NDA", min: 15.7, max: 18.7, freq: 2, month1: 3, month2: 8 },
             { name: "CDS (IMA/INA)", min: 19, max: 24, freq: 2, month1: 3, month2: 8 },
             { name: "CDS (AFA)", min: 19, max: 24, freq: 2, month1: 3, month2: 8 },
             { name: "CDS (OTA)", min: 19, max: 25, freq: 2, month1: 3, month2: 8 },
-            { name: "AFCAT", min: 20, max: 24, freq: 2, month1: 1, month2: 7 }, // Flying Branch default
-            { name: "ICG AC (GD/Tech)", min: 21, max: 25 + categoryBonus, freq: 2, month1: 2, month2: 9 }, // Roughly
-            { name: "CAPF AC", min: 20, max: 25 + categoryBonus, freq: 1, month1: 7 } // August exam
+            
+            // Flying Branch (Strict 20-24)
+            { name: "AFCAT (Flying)", min: 20, max: 24, freq: 2, month1: 1, month2: 7 },
+            
+            // Ground Duty (Standard 20-26, usually no caste relaxation, but higher limit)
+            { name: "AFCAT (Ground Duty)", min: 20, max: 26, freq: 2, month1: 1, month2: 7 },
+            
+            // ICG uses relaxations (OBC+3, SC/ST+5)
+            { name: "ICG AC (GD/Tech)", min: 21, max: 25 + categoryBonus, freq: 2, month1: 2, month2: 9 },
+            
+            // CAPF uses relaxations
+            { name: "CAPF AC", min: 20, max: 25 + categoryBonus, freq: 1, month1: 7 }
         ];
 
-        // We scan from when user was 15 years old up to 30 years old
+        // Search range: Age 15 to 32
         const startYear = dob.getFullYear() + 15; 
-        const endYear = dob.getFullYear() + 30;
+        const endYear = dob.getFullYear() + 32;
 
         exams.forEach(exam => {
             let htmlContent = "";
             let attemptsLeft = 0;
-            let totalAttempts = 0;
 
             for (let year = startYear; year <= endYear; year++) {
                 
-                // --- Cycle 1 (e.g., April/Jan) ---
+                // --- Cycle 1 (e.g., Exam in Feb/April) ---
                 if (exam.freq >= 1) {
-                    // Calculate "Age on Date of Reckoning"
-                    // Usually for 1st cycle, age is checked on Jan 1 of NEXT year
-                    let refDate1 = new Date(year + 1, 0, 1); 
-                    // Approximate exam date (used to check if it's past or future)
-                    let examDate1 = new Date(year, exam.month1, 15);
+                    let refDate1 = new Date(year + 1, 0, 1); // Age ref: Jan 1 next year
+                    let examDate1 = new Date(year, exam.month1, 15); // Approx exam date
 
                     if (checkAge(dob, refDate1, exam.min, exam.max)) {
                         let status = (examDate1 < today) ? "status-past" : "status-future";
                         if (status === "status-future") attemptsLeft++;
-                        totalAttempts++;
                         
                         let label = exam.freq === 1 ? `${year}` : `${year} - I`;
                         htmlContent += `<span class="attempt-pill ${status}">${label}</span>`;
                     }
                 }
 
-                // --- Cycle 2 (e.g., Sept/July) ---
+                // --- Cycle 2 (e.g., Exam in Aug/Sept) ---
                 if (exam.freq === 2) {
-                    // Usually for 2nd cycle, age is checked on July 1 of NEXT year
-                    let refDate2 = new Date(year + 1, 6, 1);
-                    let examDate2 = new Date(year, exam.month2, 15);
+                    let refDate2 = new Date(year + 1, 6, 1); // Age ref: July 1 next year
+                    let examDate2 = new Date(year, exam.month2, 15); // Approx exam date
 
                     if (checkAge(dob, refDate2, exam.min, exam.max)) {
                         let status = (examDate2 < today) ? "status-past" : "status-future";
                         if (status === "status-future") attemptsLeft++;
-                        totalAttempts++;
 
                         htmlContent += `<span class="attempt-pill ${status}">${year} - II</span>`;
                     }
                 }
             }
 
-            // If the user has valid attempts (past or future), show the card
             if (htmlContent !== "") {
                 const card = document.createElement('div');
                 card.className = "exam-card";
@@ -269,18 +258,16 @@
         });
 
         if (resultsDiv.innerHTML === "") {
-            resultsDiv.innerHTML = "<p style='text-align:center;'>No eligible exams found based on this DOB.</p>";
+            resultsDiv.innerHTML = "<p style='text-align:center; color:#666;'>No eligible exams found.</p>";
         }
     }
 
     function checkAge(dob, refDate, minAge, maxAge) {
-        // Calculate precise age
         const diffTime = Math.abs(refDate - dob);
         const diffYears = diffTime / (1000 * 60 * 60 * 24 * 365.25);
         return diffYears >= minAge && diffYears < maxAge;
     }
     
-    // Auto-run on load for better UX
     window.onload = calculateAttempts;
 </script>
 
