@@ -2,266 +2,286 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Defense Attempt Tracker</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"> <title>Defense Exam Full Timeline</title>
     <style>
-        :root { --primary: #1a2a6c; --secondary: #b21f1f; --future: #2e7d32; --past: #607d8b; --bg: #f5f7fa; }
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--bg); display: flex; justify-content: center; padding: 20px; }
-        .card { background: white; padding: 30px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); max-width: 900px; width: 100%; }
-        h2 { color: var(--primary); text-align: center; border-bottom: 3px solid var(--secondary); display: inline-block; width: 100%; padding-bottom: 10px; }
-        
-        .form-group { margin: 20px 0; }
-        label { font-weight: 600; color: #333; }
-        input, select { width: 100%; padding: 12px; margin-top: 8px; border: 2px solid #ddd; border-radius: 8px; font-size: 16px; box-sizing: border-box; }
-        
-        button { width: 100%; padding: 15px; background: var(--primary); color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.3s; font-size: 16px; margin-top: 10px;}
-        button:hover { background: var(--secondary); }
-        
-        .results { margin-top: 30px; }
-        .exam-section { margin-bottom: 25px; border: 1px solid #eee; border-radius: 10px; padding: 15px; background: #fff; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
-        
-        .exam-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; padding-bottom: 10px; margin-bottom: 10px; }
-        .exam-title { font-size: 18px; font-weight: bold; color: var(--primary); }
-        
-        .badges { display: flex; gap: 10px; }
-        .badge { padding: 4px 10px; border-radius: 5px; font-size: 13px; font-weight: bold; color: white; }
-        .badge-left { background: var(--future); }
-        .badge-total { background: var(--primary); }
+        /* --- CSS Variables for easy theming --- */
+        :root {
+            --primary: #1e3a8a; /* Navy Blue */
+            --accent: #dc2626; /* Red */
+            --bg: #f3f4f6;
+            --card-bg: #ffffff;
+            --past-bg: #e5e7eb; --past-text: #6b7280;
+            --future-bg: #dcfce7; --future-text: #15803d;
+        }
 
-        .attempt-container { display: flex; flex-wrap: wrap; gap: 8px; }
-        
-        /* Attempt Tags */
-        .attempt-tag { font-size: 13px; padding: 6px 12px; border-radius: 20px; border: 1px solid transparent; }
-        
-        /* Future/Left Style */
-        .future { background: #e8f5e9; color: var(--future); border-color: #c8e6c9; font-weight: 600; }
-        
-        /* Past/Expired Style */
-        .past { background: #eceff1; color: var(--past); border-color: #cfd8dc; text-decoration: line-through; opacity: 0.7; }
+        /* --- Reset & Base Styles --- */
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            min-height: 100vh;
+        }
 
-        .no-attempts { color: #c62828; font-style: italic; }
+        /* --- Main Card Container --- */
+        .container {
+            background-color: var(--card-bg);
+            width: 100%;
+            max-width: 600px; /* Keeps it looking like an app on desktop */
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            box-sizing: border-box; /* Prevents padding from breaking width */
+        }
+
+        h1 {
+            text-align: center;
+            color: var(--primary);
+            font-size: 24px;
+            margin-bottom: 20px;
+            border-bottom: 2px solid var(--bg);
+            padding-bottom: 10px;
+        }
+
+        /* --- Input Section --- */
+        .controls {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        label {
+            font-weight: 600;
+            font-size: 14px;
+            color: #374151;
+            margin-bottom: 5px;
+            display: block;
+        }
+
+        input[type="date"], select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            font-size: 16px;
+            background: #fff;
+            box-sizing: border-box; /* Fixes the column layout bug */
+        }
+
+        button {
+            width: 100%;
+            padding: 14px;
+            background-color: var(--primary);
+            color: white;
+            font-weight: bold;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        button:hover {
+            background-color: #1e40af;
+        }
+
+        /* --- Results Section --- */
+        .exam-card {
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+            background: white;
+        }
+
+        .exam-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+            border-bottom: 1px solid #f3f4f6;
+            padding-bottom: 8px;
+        }
+
+        .exam-title {
+            font-weight: 800;
+            color: var(--primary);
+            font-size: 18px;
+        }
+
+        .count-badge {
+            font-size: 12px;
+            background: var(--primary);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 12px;
+        }
+
+        .timeline-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .attempt-pill {
+            font-size: 13px;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-weight: 500;
+            display: inline-block;
+        }
+
+        /* --- Dynamic Status Colors --- */
+        .status-past {
+            background-color: var(--past-bg);
+            color: var(--past-text);
+            text-decoration: line-through; /* Visual cue for past */
+        }
+
+        .status-future {
+            background-color: var(--future-bg);
+            color: var(--future-text);
+            border: 1px solid #86efac;
+            font-weight: 700;
+        }
+
+        .no-data {
+            color: var(--accent);
+            font-style: italic;
+            font-size: 14px;
+        }
+
     </style>
 </head>
 <body>
 
-<div class="card">
-    <h2>All Defense Attempts Tracker</h2>
+<div class="container">
+    <h1>Defense Timeline Tracker</h1>
     
-    <div class="form-group">
-        <label>Select Date of Birth:</label>
-        <input type="date" id="dob" value="2003-01-01">
+    <div class="controls">
+        <div>
+            <label>Date of Birth</label>
+            <input type="date" id="dob" value="2003-01-01">
+        </div>
+
+        <div>
+            <label>Category (Relaxation)</label>
+            <select id="category">
+                <option value="0">General / EWS</option>
+                <option value="3">OBC (+3 Years)</option>
+                <option value="5">SC/ST (+5 Years)</option>
+            </select>
+        </div>
+
+        <button onclick="calculateAttempts()">Show Full History</button>
     </div>
 
-    <div class="form-group">
-        <label>Category (For CAPF/ICG Relaxation):</label>
-        <select id="category">
-            <option value="0">General / EWS</option>
-            <option value="3">OBC (+3 Years)</option>
-            <option value="5">SC/ST (+5 Years)</option>
-        </select>
-    </div>
-
-    <button onclick="generateAttempts()">Show Full Timeline</button>
-
-    <div id="results" class="results"></div>
+    <div id="results"></div>
 </div>
 
 <script>
-    function generateAttempts() {
-        const dobVal = document.getElementById('dob').value;
-        if(!dobVal) return;
-        
-        const dob = new Date(dobVal);
+    function calculateAttempts() {
+        const dobInput = document.getElementById('dob').value;
+        if (!dobInput) return alert("Please select a date of birth");
+
+        const dob = new Date(dobInput);
         const categoryBonus = parseInt(document.getElementById('category').value);
         const resultsDiv = document.getElementById('results');
         const today = new Date();
         
-        resultsDiv.innerHTML = "";
+        resultsDiv.innerHTML = ""; // Clear previous results
 
-        // Exam Database
+        // Defense Exam Database
+        // Note: min/max ages are roughly standard. 
         const exams = [
-            { name: "NDA", min: 16.5, max: 19.5, freq: 2 },
-            { name: "CDS (IMA/INA)", min: 19, max: 24, freq: 2 },
-            { name: "CDS (AFA)", min: 20, max: 24, freq: 2 },
-            { name: "CDS (OTA)", min: 19, max: 25, freq: 2 },
-            { name: "AFCAT (Flying)", min: 20, max: 24, freq: 2 },
-            { name: "AFCAT (Ground Duty)", min: 20, max: 26, freq: 2 },
-            { name: "ICG AC (GD/Tech)", min: 21, max: 25 + categoryBonus, freq: 2 }, 
-            { name: "CAPF (Assistant Commandant)", min: 20, max: 25 + categoryBonus, freq: 1 }
+            { name: "NDA", min: 15.7, max: 18.7, freq: 2, month1: 3, month2: 8 }, // Exam age approx (joining is 16.5-19.5)
+            { name: "CDS (IMA/INA)", min: 19, max: 24, freq: 2, month1: 3, month2: 8 },
+            { name: "CDS (AFA)", min: 19, max: 24, freq: 2, month1: 3, month2: 8 },
+            { name: "CDS (OTA)", min: 19, max: 25, freq: 2, month1: 3, month2: 8 },
+            { name: "AFCAT", min: 20, max: 24, freq: 2, month1: 1, month2: 7 }, // Flying Branch default
+            { name: "ICG AC (GD/Tech)", min: 21, max: 25 + categoryBonus, freq: 2, month1: 2, month2: 9 }, // Roughly
+            { name: "CAPF AC", min: 20, max: 25 + categoryBonus, freq: 1, month1: 7 } // August exam
         ];
 
-        // Start calculating from when the user turned 15 (to catch early NDA) 
-        // until they turn 32 (max limit for most entries)
-        const startYear = dob.getFullYear() + 15;
-        const endYear = dob.getFullYear() + 32;
+        // We scan from when user was 15 years old up to 30 years old
+        const startYear = dob.getFullYear() + 15; 
+        const endYear = dob.getFullYear() + 30;
 
         exams.forEach(exam => {
-            let attemptList = [];
-            let leftCount = 0;
+            let htmlContent = "";
+            let attemptsLeft = 0;
+            let totalAttempts = 0;
 
             for (let year = startYear; year <= endYear; year++) {
+                
+                // --- Cycle 1 (e.g., April/Jan) ---
+                if (exam.freq >= 1) {
+                    // Calculate "Age on Date of Reckoning"
+                    // Usually for 1st cycle, age is checked on Jan 1 of NEXT year
+                    let refDate1 = new Date(year + 1, 0, 1); 
+                    // Approximate exam date (used to check if it's past or future)
+                    let examDate1 = new Date(year, exam.month1, 15);
+
+                    if (checkAge(dob, refDate1, exam.min, exam.max)) {
+                        let status = (examDate1 < today) ? "status-past" : "status-future";
+                        if (status === "status-future") attemptsLeft++;
+                        totalAttempts++;
+                        
+                        let label = exam.freq === 1 ? `${year}` : `${year} - I`;
+                        htmlContent += `<span class="attempt-pill ${status}">${label}</span>`;
+                    }
+                }
+
+                // --- Cycle 2 (e.g., Sept/July) ---
                 if (exam.freq === 2) {
-                    // --- Cycle 1 (Usually Exam in April/Jan, Joining Jan next year) ---
-                    // Age Ref: Jan 1 of Year+1
-                    const refDate1 = new Date(year + 1, 0, 1); // Jan 1st
-                    // Approximate exam date for sorting Past/Future (e.g., April of current year)
-                    const approxExamDate1 = new Date(year, 3, 15); 
-                    
-                    if (isValid(dob, refDate1, exam.min, exam.max)) {
-                        const status = approxExamDate1 < today ? "past" : "future";
-                        if(status === "future") leftCount++;
-                        attemptList.push({
-                            label: `${exam.name} I - ${year}`,
-                            status: status
-                        });
-                    }
+                    // Usually for 2nd cycle, age is checked on July 1 of NEXT year
+                    let refDate2 = new Date(year + 1, 6, 1);
+                    let examDate2 = new Date(year, exam.month2, 15);
 
-                    // --- Cycle 2 (Usually Exam in Sept, Joining July next year) ---
-                    // Age Ref: July 1 of Year+1
-                    const refDate2 = new Date(year + 1, 6, 1); // July 1st
-                    // Approximate exam date (e.g., September of current year)
-                    const approxExamDate2 = new Date(year, 8, 4);
+                    if (checkAge(dob, refDate2, exam.min, exam.max)) {
+                        let status = (examDate2 < today) ? "status-past" : "status-future";
+                        if (status === "status-future") attemptsLeft++;
+                        totalAttempts++;
 
-                    if (isValid(dob, refDate2, exam.min, exam.max)) {
-                        const status = approxExamDate2 < today ? "past" : "future";
-                        if(status === "future") leftCount++;
-                        attemptList.push({
-                            label: `${exam.name} II - ${year}`,
-                            status: status
-                        });
-                    }
-                } else {
-                    // --- Annual Exams (CAPF) ---
-                    // Age Ref: August 1st of Exam Year
-                    const refDate = new Date(year, 7, 1); 
-                    const approxExamDate = new Date(year, 7, 4); // August
-
-                    if (isValid(dob, refDate, exam.min, exam.max)) {
-                        const status = approxExamDate < today ? "past" : "future";
-                        if(status === "future") leftCount++;
-                        attemptList.push({
-                            label: `${exam.name} ${year}`,
-                            status: status
-                        });
+                        htmlContent += `<span class="attempt-pill ${status}">${year} - II</span>`;
                     }
                 }
             }
 
-            // Render Section
-            const section = document.createElement('div');
-            section.className = 'exam-section';
-            
-            let attemptsHtml = "";
-            if (attemptList.length > 0) {
-                attemptsHtml = attemptList.map(a => 
-                    `<span class="attempt-tag ${a.status}">${a.label}</span>`
-                ).join('');
-            } else {
-                attemptsHtml = `<span class="no-attempts">Not eligible for this entry based on age.</span>`;
-            }
-
-            section.innerHTML = `
-                <div class="exam-header">
-                    <span class="exam-title">${exam.name}</span>
-                    <div class="badges">
-                        <span class="badge badge-total">Total: ${attemptList.length}</span>
-                        <span class="badge badge-left">Left: ${leftCount}</span>
+            // If the user has valid attempts (past or future), show the card
+            if (htmlContent !== "") {
+                const card = document.createElement('div');
+                card.className = "exam-card";
+                card.innerHTML = `
+                    <div class="exam-header">
+                        <span class="exam-title">${exam.name}</span>
+                        <span class="count-badge">${attemptsLeft} Left</span>
                     </div>
-                </div>
-                <div class="attempt-container">${attemptsHtml}</div>
-            `;
-            resultsDiv.appendChild(section);
-        });
-    }
-
-    function isValid(dob, refDate, min, max) {
-        // Precise age calculation
-        let ageInMillis = refDate - dob;
-        let ageInYears = ageInMillis / (1000 * 60 * 60 * 24 * 365.25);
-        return ageInYears >= min && ageInYears < max;
-    }
-</script>
-
-</body>
-</html>
-        <select id="category">
-            <option value="0">General / EWS</option>
-            <option value="3">OBC (+3 Years)</option>
-            <option value="5">SC/ST (+5 Years)</option>
-        </select>
-    </div>
-
-    <button onclick="generateAttempts()">Calculate My Timeline</button>
-
-    <div id="results" class="results"></div>
-</div>
-
-<script>
-    function generateAttempts() {
-        const dobVal = document.getElementById('dob').value;
-        if(!dobVal) return;
-        const dob = new Date(dobVal);
-        const categoryBonus = parseInt(document.getElementById('category').value);
-        const resultsDiv = document.getElementById('results');
-        resultsDiv.innerHTML = "";
-
-        const exams = [
-            { name: "NDA", min: 16.5, max: 19.5, freq: 2 },
-            { name: "CDS (IMA/INA)", min: 19, max: 24, freq: 2 },
-            { name: "CDS (AFA)", min: 20, max: 24, freq: 2 },
-            { name: "CDS (OTA)", min: 19, max: 25, freq: 2 },
-            { name: "AFCAT (Flying)", min: 20, max: 24, freq: 2 },
-            { name: "AFCAT (Ground Duty)", min: 20, max: 26, freq: 2 },
-            { name: "CAPF (Assistant Commandant)", min: 20, max: 25 + categoryBonus, freq: 1 }
-        ];
-
-        exams.forEach(exam => {
-            let attemptList = [];
-            // We check for cycles from 2026 to 2035
-            for (let year = 2026; year <= 2035; year++) {
-                if (exam.freq === 2) {
-                    // Cycle 1: Joins Jan 1 of Year+1
-                    const doj1 = new Date(year + 1, 0, 1);
-                    if (isValid(dob, doj1, exam.min, exam.max)) {
-                        attemptList.push(`${exam.name} I - ${year} (DOJ: Jan ${year + 1})`);
-                    }
-                    // Cycle 2: Joins July 1 of Year+1
-                    const doj2 = new Date(year + 1, 6, 1);
-                    if (isValid(dob, doj2, exam.min, exam.max)) {
-                        attemptList.push(`${exam.name} II - ${year} (DOJ: July ${year + 1})`);
-                    }
-                } else {
-                    // CAPF: Age as of Aug 1st of Exam Year
-                    const doj = new Date(year, 7, 1);
-                    if (isValid(dob, doj, exam.min, exam.max)) {
-                        attemptList.push(`CAPF AC ${year} (Ref: Aug ${year})`);
-                    }
-                }
+                    <div class="timeline-grid">
+                        ${htmlContent}
+                    </div>
+                `;
+                resultsDiv.appendChild(card);
             }
-
-            // Render Exam Section
-            const section = document.createElement('div');
-            section.className = 'exam-section';
-            
-            let attemptsHtml = attemptList.length > 0 
-                ? attemptList.map(a => `<span class="attempt-tag">${a}</span>`).join('')
-                : `<span class="attempt-tag expired-tag">No attempts remaining based on age</span>`;
-
-            section.innerHTML = `
-                <div class="exam-header">
-                    ${exam.name} 
-                    <span class="total-badge">${attemptList.length} Left</span>
-                </div>
-                <div class="attempt-container">${attemptsHtml}</div>
-            `;
-            resultsDiv.appendChild(section);
         });
+
+        if (resultsDiv.innerHTML === "") {
+            resultsDiv.innerHTML = "<p style='text-align:center;'>No eligible exams found based on this DOB.</p>";
+        }
     }
 
-    function isValid(dob, doj, min, max) {
-        let age = (doj - dob) / (1000 * 60 * 60 * 24 * 365.25);
-        return age >= min && age < max;
+    function checkAge(dob, refDate, minAge, maxAge) {
+        // Calculate precise age
+        const diffTime = Math.abs(refDate - dob);
+        const diffYears = diffTime / (1000 * 60 * 60 * 24 * 365.25);
+        return diffYears >= minAge && diffYears < maxAge;
     }
+    
+    // Auto-run on load for better UX
+    window.onload = calculateAttempts;
 </script>
 
 </body>
