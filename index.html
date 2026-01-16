@@ -34,7 +34,7 @@ body{
     box-shadow:0 4px 6px rgba(0,0,0,.05);
     padding:24px;
 }
-h1{text-align:center;font-size:22px;margin-bottom:20px;}
+h1{text-align:center;font-size:22px;margin-bottom:20px; color:var(--primary);}
 .controls{
     background:#f1f5f9;
     padding:15px;
@@ -56,6 +56,7 @@ input,select,button{
     font-size:15px;
     border-radius:8px;
     border:1px solid #cbd5e1;
+    box-sizing: border-box;
 }
 button{
     background:var(--primary);
@@ -63,6 +64,7 @@ button{
     font-weight:700;
     border:none;
     cursor:pointer;
+    margin-bottom: 0;
 }
 .exam-card{
     border:1px solid var(--border);
@@ -74,6 +76,7 @@ button{
     display:flex;
     justify-content:space-between;
     margin-bottom:10px;
+    align-items: center;
 }
 .count-badge{
     background:var(--primary);
@@ -108,6 +111,7 @@ button{
     color:#64748b;
     text-align:center;
     margin-top:20px;
+    line-height: 1.4;
 }
 </style>
 </head>
@@ -134,111 +138,118 @@ button{
 
 <div class="disclaimer">
 Note: NDA, CDS & AFCAT do not have caste-based age relaxation.<br>
-Calculations are based on standard "Age at Joining" or "Age at Exam" criteria.
+Calculations are based on strict "Age at Joining" criteria (Inclusive).
 </div>
 </div>
 
 <script>
-// ---------- AGE CHECK ----------
+// ---------- AGE CALCULATOR ----------
 function checkAge(dob, refDate, minAge, maxAge){
-    const years=(refDate-dob)/(1000*60*60*24*365.25);
-    return years>=minAge && years<maxAge;
+    // Calculate difference in milliseconds
+    const diff = refDate - dob;
+    // Convert to years (using 365.25 to account for leap years)
+    const ageInYears = diff / (1000 * 60 * 60 * 24 * 365.25);
+    
+    // Strict check: Age must be >= Min AND <= Max
+    // Using <= Max handles the "Inclusive" requirement (e.g. 19.5 years old exactly)
+    return ageInYears >= minAge && ageInYears <= maxAge;
 }
 
-// ---------- ELIGIBILITY RESOLVER ----------
-function isEligible(exam,dob,refDate,categoryBonus){
-
-    // NDA – DOB WINDOW PER CYCLE (FIX)
-    if(exam.mode==="dob-window"){
-        const latestDOB=new Date(refDate);
-        latestDOB.setFullYear(latestDOB.getFullYear()-16);
-        latestDOB.setDate(latestDOB.getDate()-1);
-
-        const earliestDOB=new Date(refDate);
-        earliestDOB.setFullYear(earliestDOB.getFullYear()-19);
-        earliestDOB.setDate(earliestDOB.getDate()+1);
-
-        return dob>=earliestDOB && dob<=latestDOB;
-    }
-
-    // Other exams – age based
-    let maxAge=exam.max;
-    if(exam.isRelaxable) maxAge+=categoryBonus;
-    return checkAge(dob,refDate,exam.min,maxAge);
-}
-
-// ---------- MAIN ----------
+// ---------- MAIN FUNCTION ----------
 function calculateAttempts(){
+    const dobInput = document.getElementById("dob").value;
+    if(!dobInput) return;
+    
+    const dob = new Date(dobInput);
+    const categoryBonus = parseInt(document.getElementById("category").value);
+    const today = new Date();
+    const results = document.getElementById("results");
+    results.innerHTML="";
 
-const dob=new Date(document.getElementById("dob").value);
-const categoryBonus=parseInt(document.getElementById("category").value);
-const today=new Date();
-const results=document.getElementById("results");
-results.innerHTML="";
+    // Exam Configuration
+    // refMode: 'next_year' (Jan 1 / July 1 of Year+1)
+    // refMode: 'current_year' (Aug 1 of Year)
+    const exams=[
+        // NDA: 16.5 to 19.5 at Joining (Jan/July next year)
+        {name:"NDA", min:16.5, max:19.5, freq:2, isRelaxable:false, refMode:"next_year"},
+        
+        {name:"CDS (IMA/INA)", min:19, max:24, freq:2, isRelaxable:false, refMode:"next_year"},
+        {name:"CDS (AFA)", min:20, max:24, freq:2, isRelaxable:false, refMode:"next_year"},
+        {name:"CDS (OTA)", min:19, max:25, freq:2, isRelaxable:false, refMode:"next_year"},
+        
+        {name:"AFCAT (Flying)", min:20, max:24, freq:2, isRelaxable:false, refMode:"next_year"},
+        {name:"AFCAT (Ground Duty)", min:20, max:26, freq:2, isRelaxable:false, refMode:"next_year"},
+        
+        {name:"ICG AC (GD/Tech)", min:21, max:25, freq:2, isRelaxable:true, refMode:"next_year"},
+        {name:"CAPF AC", min:20, max:25, freq:1, isRelaxable:true, refMode:"current_year"}
+    ];
 
-const exams=[
-    {name:"NDA",mode:"dob-window",freq:2},
-    {name:"CDS (IMA/INA)",min:19,max:24,freq:2,isRelaxable:false,refMode:"next_year"},
-    {name:"CDS (AFA)",min:20,max:24,freq:2,isRelaxable:false,refMode:"next_year"},
-    {name:"CDS (OTA)",min:19,max:25,freq:2,isRelaxable:false,refMode:"next_year"},
-    {name:"AFCAT (Flying)",min:20,max:24,freq:2,isRelaxable:false,refMode:"next_year"},
-    {name:"AFCAT (Ground Duty)",min:20,max:26,freq:2,isRelaxable:false,refMode:"next_year"},
-    {name:"ICG AC (GD/Tech)",min:21,max:25,freq:2,isRelaxable:true,refMode:"next_year"},
-    {name:"CAPF AC",min:20,max:25,freq:1,isRelaxable:true,refMode:"current_year"}
-];
+    // Scan from Age 15 to 33
+    const startYear = dob.getFullYear() + 15;
+    const endYear = dob.getFullYear() + 33;
 
-const startYear=dob.getFullYear()+15;
-const endYear=dob.getFullYear()+33;
+    exams.forEach(exam=>{
+        let html="";
+        let left=0;
+        
+        // Determine Max Age (Add relaxation if applicable)
+        let effectiveMax = exam.max;
+        if(exam.isRelaxable) effectiveMax += categoryBonus;
 
-exams.forEach(exam=>{
-    let html="";
-    let left=0;
+        for(let year=startYear; year<=endYear; year++){
 
-    for(let year=startYear;year<=endYear;year++){
+            // --- Cycle I ---
+            // Determine Reference Date (Age Cutoff)
+            let ref1;
+            if(exam.refMode === "current_year") {
+                ref1 = new Date(year, 7, 1); // Aug 1st of current year (CAPF)
+            } else {
+                ref1 = new Date(year + 1, 0, 1); // Jan 1st of NEXT year (Standard)
+            }
 
-        // Cycle I
-        let ref1=exam.refMode==="current_year"
-            ? new Date(year,7,1)
-            : new Date(year+1,0,1);
+            // Approx Exam Date (for Past/Future coloring)
+            let examDate1 = new Date(year, 3, 15); // April
 
-        let exam1=new Date(year,3,15);
+            if(checkAge(dob, ref1, exam.min, effectiveMax)){
+                let cls = examDate1 < today ? "status-past" : "status-future";
+                if(cls === "status-future") left++;
+                
+                let label = exam.freq === 1 ? `${year}` : `${year} - I`;
+                html += `<span class="attempt-pill ${cls}">${label}</span>`;
+            }
 
-        if(isEligible(exam,dob,ref1,categoryBonus)){
-            let cls=exam1<today?"status-past":"status-future";
-            if(cls==="status-future") left++;
-            html+=`<span class="attempt-pill ${cls}">${year} - I</span>`;
-        }
+            // --- Cycle II (Only if freq is 2) ---
+            if(exam.freq === 2){
+                // Cycle II always references July 1st of Next Year
+                let ref2 = new Date(year + 1, 6, 1);
+                let examDate2 = new Date(year, 8, 15); // September
 
-        // Cycle II
-        if(exam.freq===2){
-            let ref2=new Date(year+1,6,1);
-            let exam2=new Date(year,8,15);
-
-            if(isEligible(exam,dob,ref2,categoryBonus)){
-                let cls=exam2<today?"status-past":"status-future";
-                if(cls==="status-future") left++;
-                html+=`<span class="attempt-pill ${cls}">${year} - II</span>`;
+                if(checkAge(dob, ref2, exam.min, effectiveMax)){
+                    let cls = examDate2 < today ? "status-past" : "status-future";
+                    if(cls === "status-future") left++;
+                    html += `<span class="attempt-pill ${cls}">${year} - II</span>`;
+                }
             }
         }
+
+        if(html){
+            results.innerHTML += `
+            <div class="exam-card">
+                <div class="exam-header">
+                    <strong style="color:var(--primary)">${exam.name}</strong>
+                    <span class="count-badge">${left} Left</span>
+                </div>
+                <div class="timeline-grid">${html}</div>
+            </div>`;
+        }
+    });
+
+    if(!results.innerHTML){
+        results.innerHTML="<p style='text-align:center;color:#666;margin-top:20px;'>No eligible exams found based on this Date of Birth.</p>";
     }
-
-    if(html){
-        results.innerHTML+=`
-        <div class="exam-card">
-            <div class="exam-header">
-                <strong>${exam.name}</strong>
-                <span class="count-badge">${left} Left</span>
-            </div>
-            <div class="timeline-grid">${html}</div>
-        </div>`;
-    }
-});
-
-if(!results.innerHTML){
-    results.innerHTML="<p style='text-align:center;color:#666'>No eligible exams found.</p>";
-}
 }
 
+// Auto-run on load
 window.onload=calculateAttempts;
 </script>
 
