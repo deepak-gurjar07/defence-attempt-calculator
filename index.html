@@ -6,13 +6,13 @@
     <title>Defense Attempt Tracker</title>
     <style>
         :root {
-            --primary: #1e3a8a; /* Navy */
+            --primary: #1e3a8a; 
             --bg: #f1f5f9;
             --card-bg: #ffffff;
             --text: #334155;
-            --pill-future: #dcfce7; --text-future: #166534; /* Green */
-            --pill-past: #e2e8f0; --text-past: #64748b; /* Gray */
-            --pill-last: #ffedd5; --text-last: #9a3412; /* Orange (Last Attempt) */
+            --pill-future: #dcfce7; --text-future: #166534; 
+            --pill-past: #e2e8f0; --text-past: #64748b; 
+            --pill-last: #ffedd5; --text-last: #9a3412; 
         }
 
         body {
@@ -116,6 +116,14 @@
             margin-top: 20px; 
             line-height: 1.5; 
         }
+
+        .footer {
+            text-align: center;
+            font-size: 12px;
+            color: #94a3b8;
+            margin-top: 15px;
+            font-weight: 500;
+        }
     </style>
 </head>
 <body>
@@ -142,9 +150,13 @@
     <div id="results"></div>
     
     <div class="disclaimer">
-        <strong>Disclaimer:</strong> This tool calculates attempts using the official pattern: <br>
-        <em>"Born not earlier than 2nd Jan/July X and not later than 1st Jan/July Y"</em>. <br>
+        <strong>Disclaimer:</strong> This tool calculates attempts using the official pattern: 
+        <em>"Born not earlier than 2nd Jan/July and not later than 1st Jan/July"</em>. <br>
         Actual eligibility also depends on Educational Qualification, Gender, and Marital Status.
+    </div>
+
+    <div class="footer">
+        Developed by Deepak
     </div>
 </div>
 
@@ -153,7 +165,6 @@
         const dobInput = document.getElementById('dob');
         if (!dobInput.value) return;
 
-        // Parse DOB strictly (Year, Month, Day) to avoid timezone shifts
         const parts = dobInput.value.split('-'); 
         const dob = new Date(parts[0], parts[1] - 1, parts[2]); 
 
@@ -164,15 +175,10 @@
         const resultsDiv = document.getElementById('results');
         resultsDiv.innerHTML = "";
 
-        // --- EXAM CONFIGURATION ---
-        // offset1: Month index for Cycle 1 Course (0 = Jan, 3 = Apr, 7 = Aug)
-        // offset2: Month index for Cycle 2 Course (6 = Jul, 9 = Oct)
         const exams = [
-            // 10+2 Entries (Course: Jan/Jul)
             { name: "Army TES (10+2)", min: 16.5, max: 19.5, freq: 2, offset1: 0, offset2: 6 },
             { name: "Navy 10+2 (B.Tech)", min: 16.5, max: 19.5, freq: 2, offset1: 0, offset2: 6 },
             
-            // Standard Written Exams (Course: Jan/Jul)
             { name: "NDA", min: 16.5, max: 19.5, freq: 2, offset1: 0, offset2: 6 }, 
             { name: "CDS (IMA/INA)", min: 19, max: 24, freq: 2, offset1: 0, offset2: 6 },
             { name: "CDS (AFA)", min: 20, max: 24, freq: 2, offset1: 0, offset2: 6 },
@@ -181,16 +187,13 @@
             { name: "AFCAT (Ground Duty)", min: 20, max: 26, freq: 2, offset1: 0, offset2: 6 },
             { name: "ICG AC", min: 21, max: 25 + categoryBonus, freq: 2, offset1: 0, offset2: 6 },
             
-            // CAPF (Cycle 1 only, Aug Course)
             { name: "CAPF AC", min: 20, max: 25 + categoryBonus, freq: 1, offset1: 7 }, 
 
-            // Graduate Tech (Course: Apr/Oct)
             { name: "Army SSC Tech", min: 20, max: 27, freq: 2, offset1: 3, offset2: 9 },
             { name: "Army NCC Special", min: 19, max: 25, freq: 2, offset1: 3, offset2: 9 },
-            { name: "Navy SSC Tech", min: 19.5, max: 25, freq: 2, offset1: 0, offset2: 6 } // Navy often adheres to Jan/Jul or varies, sticking to standard for safety
+            { name: "Navy SSC Tech", min: 19.5, max: 25, freq: 2, offset1: 0, offset2: 6 } 
         ];
 
-        // Wide search range
         const startYear = dob.getFullYear() + 15;
         const endYear = dob.getFullYear() + 35;
 
@@ -199,39 +202,30 @@
             let futureCount = 0;
 
             for (let year = startYear; year <= endYear; year++) {
-                // --- CYCLE 1 ---
-                // Rule: Course starts next year (Year+1)
-                // Exception: CAPF starts same year (Year)
-                let courseYear1 = (exam.name.includes("CAPF")) ? year : year + 1;
                 
-                // Get strict date limits based on Course Commencement
+                let courseYear1 = (exam.name.includes("CAPF")) ? year : year + 1;
                 let range1 = getOfficialRange(courseYear1, exam.offset1, exam.min, exam.max);
                 
                 if (dob >= range1.min && dob <= range1.max) {
-                    // Estimate Exam Date for sorting (Approx 9-10 months before course)
                     let examDate1 = new Date(year, exam.offset1, 15); 
-                    if(exam.name.includes("CDS") || exam.name.includes("NDA")) examDate1 = new Date(year, 3, 15); // April
+                    if(exam.name.includes("CDS") || exam.name.includes("NDA")) examDate1 = new Date(year, 3, 15);
 
                     let status = examDate1 < today ? "status-past" : "status-future";
                     attemptList.push({ lbl: exam.freq === 1 ? `${year}` : `${year}-I`, status: status });
                 }
 
-                // --- CYCLE 2 (Freq 2 only) ---
                 if (exam.freq === 2) {
-                    let courseYear2 = year + 1; // Always next year
-                    
+                    let courseYear2 = year + 1; 
                     let range2 = getOfficialRange(courseYear2, exam.offset2, exam.min, exam.max);
                     
                     if (dob >= range2.min && dob <= range2.max) {
-                         // Estimate Exam Date
-                        let examDate2 = new Date(year, 8, 4); // September
+                        let examDate2 = new Date(year, 8, 4); 
                         let status = examDate2 < today ? "status-past" : "status-future";
                         attemptList.push({ lbl: `${year}-II`, status: status });
                     }
                 }
             }
 
-            // Post-Process
             attemptList.forEach(item => { if(item.status === 'status-future') futureCount++; });
             
             let lastFutureIndex = -1;
@@ -265,23 +259,14 @@
         }
     }
 
-    // --- THE GOLDEN RULE FUNCTION ---
-    // Replicates official pattern: "Born not earlier than 2nd... and not later than 1st..."
     function getOfficialRange(courseYear, courseMonth, minAge, maxAge) {
-        
-        // 1. Calculate Oldest Allowed (Lower Limit)
-        // Rule: 2nd Day of Reference Month
-        // Formula: CourseYear - MaxAge
         let minYear = courseYear - Math.floor(maxAge);
-        let minMonth = courseMonth - (maxAge % 1 * 12); // Handle .5 ages
-        let minDate = new Date(minYear, minMonth, 2);   // "2nd" Rule
+        let minMonth = courseMonth - (maxAge % 1 * 12); 
+        let minDate = new Date(minYear, minMonth, 2); 
 
-        // 2. Calculate Youngest Allowed (Upper Limit)
-        // Rule: 1st Day of Reference Month
-        // Formula: CourseYear - MinAge
         let maxYear = courseYear - Math.floor(minAge);
-        let maxMonth = courseMonth - (minAge % 1 * 12); // Handle .5 ages
-        let maxDate = new Date(maxYear, maxMonth, 1);   // "1st" Rule
+        let maxMonth = courseMonth - (minAge % 1 * 12); 
+        let maxDate = new Date(maxYear, maxMonth, 1); 
         
         return { min: minDate, max: maxDate };
     }
