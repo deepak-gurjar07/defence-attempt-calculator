@@ -1,278 +1,166 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Defense Attempt Tracker</title>
-    <style>
-        :root {
-            --primary: #1e3a8a; 
-            --bg: #f1f5f9;
-            --card-bg: #ffffff;
-            --text: #334155;
-            --pill-future: #dcfce7; --text-future: #166534; 
-            --pill-past: #e2e8f0; --text-past: #64748b; 
-            --pill-last: #ffedd5; --text-last: #9a3412; 
-        }
-
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            background: var(--bg);
-            margin: 0;
-            padding: 20px;
-            display: flex;
-            justify-content: center;
-        }
-
-        .container {
-            background: var(--card-bg);
-            width: 100%;
-            max-width: 600px;
-            border-radius: 16px;
-            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
-            padding: 24px;
-            box-sizing: border-box;
-        }
-
-        h1 {
-            text-align: center;
-            color: var(--primary);
-            font-size: 22px;
-            margin-top: 0;
-            border-bottom: 2px solid var(--bg);
-            padding-bottom: 15px;
-        }
-
-        .controls {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-            margin-bottom: 20px;
-        }
-
-        label {
-            font-size: 13px;
-            font-weight: 700;
-            color: #475569;
-            text-transform: uppercase;
-        }
-
-        input, select, button {
-            width: 100%;
-            padding: 14px;
-            border-radius: 8px;
-            border: 1px solid #cbd5e1;
-            font-size: 16px;
-            box-sizing: border-box;
-        }
-
-        button {
-            background: var(--primary);
-            color: white;
-            font-weight: bold;
-            border: none;
-            cursor: pointer;
-            margin-top: 5px;
-        }
-
-        .exam-card {
-            border: 1px solid #e2e8f0;
-            border-radius: 12px;
-            padding: 16px;
-            margin-bottom: 16px;
-        }
-
-        .exam-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 12px;
-        }
-
-        .exam-title { font-weight: 800; color: var(--primary); }
-        .badge { font-size: 12px; background: var(--primary); color: white; padding: 4px 10px; border-radius: 20px; }
-
-        .timeline { display: flex; flex-wrap: wrap; gap: 8px; }
-
-        .pill {
-            font-size: 13px;
-            padding: 6px 12px;
-            border-radius: 6px;
-            font-weight: 600;
-        }
-
-        .status-future { background: var(--pill-future); color: var(--text-future); border: 1px solid #86efac; }
-        .status-past { background: var(--pill-past); color: var(--text-past); text-decoration: line-through; }
-        .status-last { background: var(--pill-last); color: var(--text-last); border: 1px solid #fdba74; }
-
-        .disclaimer { 
-            font-size: 11px; 
-            color: #64748b; 
-            background: #f8fafc;
-            padding: 12px;
-            border-radius: 8px;
-            border: 1px solid #e2e8f0;
-            text-align: center; 
-            margin-top: 20px; 
-            line-height: 1.5; 
-        }
-
-        .footer {
-            text-align: center;
-            font-size: 12px;
-            color: #94a3b8;
-            margin-top: 15px;
-            font-weight: 500;
-        }
-    </style>
-</head>
-<body>
-
-<div class="container">
-    <h1>Defense Attempt Tracker</h1>
-    
-    <div class="controls">
-        <div>
-            <label>Date of Birth</label>
-            <input type="date" id="dob" value="2004-07-04">
-        </div>
-        <div>
-            <label>Category (For CAPF/ICG)</label>
-            <select id="category">
-                <option value="0">General / EWS</option>
-                <option value="3">OBC (+3 Years)</option>
-                <option value="5">SC/ST (+5 Years)</option>
-            </select>
-        </div>
-        <button onclick="calculate()">Check Eligibility</button>
-    </div>
-
-    <div id="results"></div>
-    
-    <div class="disclaimer">
-        <strong>Disclaimer:</strong> This tool calculates attempts using the official pattern: 
-        <em>"Born not earlier than 2nd Jan/July and not later than 1st Jan/July"</em>. <br>
-        Actual eligibility also depends on Educational Qualification, Gender, and Marital Status.
-    </div>
-
-    <div class="footer">
-        Developed by Deepak
-    </div>
-</div>
-
-<script>
-    function calculate() {
-        const dobInput = document.getElementById('dob');
-        if (!dobInput.value) return;
-
-        const parts = dobInput.value.split('-'); 
-        const dob = new Date(parts[0], parts[1] - 1, parts[2]); 
-
-        const categoryBonus = parseInt(document.getElementById('category').value);
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-
-        const resultsDiv = document.getElementById('results');
-        resultsDiv.innerHTML = "";
-
-        const exams = [
-            { name: "Army TES (10+2)", min: 16.5, max: 19.5, freq: 2, offset1: 0, offset2: 6 },
-            { name: "Navy 10+2 (B.Tech)", min: 16.5, max: 19.5, freq: 2, offset1: 0, offset2: 6 },
-            
-            { name: "NDA", min: 16.5, max: 19.5, freq: 2, offset1: 0, offset2: 6 }, 
-            { name: "CDS (IMA/INA)", min: 19, max: 24, freq: 2, offset1: 0, offset2: 6 },
-            { name: "CDS (AFA)", min: 20, max: 24, freq: 2, offset1: 0, offset2: 6 },
-            { name: "CDS (OTA)", min: 19, max: 25, freq: 2, offset1: 0, offset2: 6 },
-            { name: "AFCAT (Flying)", min: 20, max: 24, freq: 2, offset1: 0, offset2: 6 },
-            { name: "AFCAT (Ground Duty)", min: 20, max: 26, freq: 2, offset1: 0, offset2: 6 },
-            { name: "ICG AC", min: 21, max: 25 + categoryBonus, freq: 2, offset1: 0, offset2: 6 },
-            
-            { name: "CAPF AC", min: 20, max: 25 + categoryBonus, freq: 1, offset1: 7 }, 
-
-            { name: "Army SSC Tech", min: 20, max: 27, freq: 2, offset1: 3, offset2: 9 },
-            { name: "Army NCC Special", min: 19, max: 25, freq: 2, offset1: 3, offset2: 9 },
-            { name: "Navy SSC Tech", min: 19.5, max: 25, freq: 2, offset1: 0, offset2: 6 } 
-        ];
-
-        const startYear = dob.getFullYear() + 15;
-        const endYear = dob.getFullYear() + 35;
-
-        exams.forEach(exam => {
-            let attemptList = [];
-            let futureCount = 0;
-
-            for (let year = startYear; year <= endYear; year++) {
-                
-                let courseYear1 = (exam.name.includes("CAPF")) ? year : year + 1;
-                let range1 = getOfficialRange(courseYear1, exam.offset1, exam.min, exam.max);
-                
-                if (dob >= range1.min && dob <= range1.max) {
-                    let examDate1 = new Date(year, exam.offset1, 15); 
-                    if(exam.name.includes("CDS") || exam.name.includes("NDA")) examDate1 = new Date(year, 3, 15);
-
-                    let status = examDate1 < today ? "status-past" : "status-future";
-                    attemptList.push({ lbl: exam.freq === 1 ? `${year}` : `${year}-I`, status: status });
-                }
-
-                if (exam.freq === 2) {
-                    let courseYear2 = year + 1; 
-                    let range2 = getOfficialRange(courseYear2, exam.offset2, exam.min, exam.max);
-                    
-                    if (dob >= range2.min && dob <= range2.max) {
-                        let examDate2 = new Date(year, 8, 4); 
-                        let status = examDate2 < today ? "status-past" : "status-future";
-                        attemptList.push({ lbl: `${year}-II`, status: status });
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>Defense Tracker - Eligibility Check</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,typography"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
+        rel="stylesheet" />
+    <script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        primary: "#1E3A8A", // Sophisticated Navy Blue
+                        "primary-hover": "#172554", // Darker Navy for hover
+                        "primary-light": "#DBEAFE", // Very light wash of navy
+                        "background-light": "#F8FAFC", // Very light, cool-toned grey
+                        "background-dark": "#0F172A", // Slate 900
+                        "surface-light": "#FFFFFF",
+                        "surface-dark": "#1E293B", // Slate 800
+                        "border-light": "#E2E8F0", // Slate 200
+                        "border-dark": "#334155", // Slate 700
+                        "text-main-light": "#0F172A",
+                        "text-main-dark": "#F1F5F9",
+                        "text-muted-light": "#64748B",
+                        "text-muted-dark": "#94A3B8",
+                    },
+                    fontFamily: {
+                        sans: ["Inter", "sans-serif"],
+                        display: ["Inter", "sans-serif"],
+                    },
+                    borderRadius: {
+                        DEFAULT: "0.5rem",
+                    },
+                    boxShadow: {
+                        'soft': '0 4px 6px -1px rgba(30, 58, 138, 0.05), 0 2px 4px -1px rgba(30, 58, 138, 0.03)',
                     }
-                }
-            }
+                },
+            },
+        };
+    </script>
+    <link href="style.css" rel="stylesheet" />
+</head>
 
-            attemptList.forEach(item => { if(item.status === 'status-future') futureCount++; });
-            
-            let lastFutureIndex = -1;
-            for(let i = attemptList.length - 1; i >= 0; i--) {
-                if(attemptList[i].status === 'status-future') {
-                    lastFutureIndex = i;
-                    break;
-                }
-            }
-
-            if (attemptList.length > 0) {
-                let html = attemptList.map((item, index) => {
-                    let cls = item.status;
-                    if(index === lastFutureIndex) cls = "status-last"; 
-                    return `<span class="pill ${cls}">${item.lbl}</span>`;
-                }).join('');
-
-                resultsDiv.innerHTML += `
-                <div class="exam-card">
-                    <div class="exam-header">
-                        <span class="exam-title">${exam.name}</span>
-                        <span class="badge">${futureCount} Left</span>
+<body
+    class="bg-background-light dark:bg-background-dark text-text-main-light dark:text-text-main-dark font-sans transition-colors duration-200 antialiased min-h-screen flex flex-col">
+    <header
+        class="bg-surface-light dark:bg-surface-dark border-b border-border-light dark:border-border-dark sticky top-0 z-10 shadow-soft">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5">
+            <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+                <div class="flex items-center gap-4 shrink-0">
+                    <div
+                        class="w-12 h-12 rounded-xl bg-primary flex items-center justify-center text-white shadow-lg shadow-blue-900/10 shrink-0">
+                        <span class="material-symbols-outlined text-2xl">shield</span>
                     </div>
-                    <div class="timeline">${html}</div>
-                </div>`;
-            }
-        });
+                    <div>
+                        <h1 class="text-2xl font-bold tracking-tight text-primary dark:text-blue-400">Defense Tracker
+                        </h1>
+                        <p
+                            class="text-xs text-text-muted-light dark:text-text-muted-dark font-medium uppercase tracking-wide mt-0.5">
+                            Eligibility Check</p>
+                    </div>
+                </div>
+                <div
+                    class="flex flex-col sm:flex-row flex-wrap lg:flex-nowrap gap-3 w-full lg:w-auto items-center justify-start lg:justify-end">
+                    <div class="relative w-full sm:flex-1 lg:w-48 lg:flex-none">
+                        <label class="sr-only" for="dob">Date of Birth</label>
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <span class="material-symbols-outlined text-gray-400 text-lg">calendar_today</span>
+                        </div>
+                        <input
+                            class="block w-full pl-10 pr-3 py-2.5 border border-border-light dark:border-border-dark rounded-lg leading-5 bg-background-light dark:bg-background-dark text-text-main-light dark:text-text-main-dark placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary sm:text-sm transition-all shadow-sm"
+                            id="dob" type="date" value="2004-07-04" onchange="calculate()" />
+                    </div>
+                    <div class="relative w-full sm:flex-1 lg:w-64 lg:flex-none">
+                        <label class="sr-only" for="category">Category</label>
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <span class="material-symbols-outlined text-gray-400 text-lg">category</span>
+                        </div>
+                        <select
+                            class="block w-full pl-10 pr-10 py-2.5 border border-border-light dark:border-border-dark rounded-lg leading-5 bg-background-light dark:bg-background-dark text-text-main-light dark:text-text-main-dark focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary sm:text-sm appearance-none transition-all cursor-pointer shadow-sm"
+                            id="category" onchange="calculate()">
+                            <option value="0">General / EWS</option>
+                            <option value="3">OBC (+3 Years)</option>
+                            <option value="5">SC/ST (+5 Years)</option>
+                        </select>
+                        <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                            <span class="material-symbols-outlined text-gray-400 text-lg">expand_more</span>
+                        </div>
+                    </div>
+                    <button onclick="calculate()"
+                        class="w-full sm:w-auto px-6 py-2.5 border border-transparent text-sm font-semibold rounded-lg shadow-md shadow-primary/30 text-white bg-primary hover:bg-primary-hover focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-all shrink-0">
+                        Check Status
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+    <main class="flex-grow max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-10">
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-10">
+            <div
+                class="col-span-1 bg-surface-light dark:bg-surface-dark p-5 rounded-xl border border-border-light dark:border-border-dark shadow-soft flex items-center gap-4 hover:border-primary/30 transition-colors">
+                <div
+                    class="p-3 rounded-full bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-400 ring-1 ring-green-100 dark:ring-green-800">
+                    <span class="material-symbols-outlined text-xl">check_circle</span>
+                </div>
+                <div>
+                    <p
+                        class="text-xs text-text-muted-light dark:text-text-muted-dark uppercase font-bold tracking-wider">
+                        Eligible For</p>
+                    <p class="text-xl font-bold text-primary dark:text-white mt-0.5" id="eligible-exams-count">0 Exams
+                    </p>
+                </div>
+            </div>
+            <div
+                class="col-span-1 md:col-span-3 bg-surface-light dark:bg-surface-dark p-5 rounded-xl border border-border-light dark:border-border-dark shadow-soft flex items-center gap-4 hover:border-primary/30 transition-colors">
+                <div
+                    class="p-3 rounded-full bg-orange-50 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400 ring-1 ring-orange-100 dark:ring-orange-800">
+                    <span class="material-symbols-outlined text-xl">hourglass_bottom</span>
+                </div>
+                <div class="overflow-hidden">
+                    <p
+                        class="text-xs text-text-muted-light dark:text-text-muted-dark uppercase font-bold tracking-wider">
+                        Last Chances</p>
+                    <p class="text-xl font-bold text-primary dark:text-white mt-0.5 truncate" id="last-chance-exam">-
+                    </p>
+                </div>
+            </div>
+        </div>
 
-        if (resultsDiv.innerHTML === "") {
-            resultsDiv.innerHTML = "<p style='text-align:center'>No attempts found.</p>";
-        }
-    }
+        <div
+            class="bg-surface-light dark:bg-surface-dark shadow-soft rounded-2xl border border-border-light dark:border-border-dark overflow-hidden">
+            <div
+                class="hidden md:grid md:grid-cols-12 gap-6 px-8 py-4 bg-gray-50/80 dark:bg-gray-800/50 border-b border-border-light dark:border-border-dark text-xs font-bold text-text-muted-light dark:text-text-muted-dark uppercase tracking-wider">
+                <div class="col-span-4 lg:col-span-3">Exam Name</div>
+                <div class="col-span-7 lg:col-span-8">Timeline &amp; Attempts</div>
+                <div class="col-span-1 text-right">Remaining</div>
+            </div>
+            <div id="results" class="divide-y divide-border-light dark:divide-border-dark">
+                <!-- Javascript will inject exam rows here -->
+            </div>
+        </div>
 
-    function getOfficialRange(courseYear, courseMonth, minAge, maxAge) {
-        let minYear = courseYear - Math.floor(maxAge);
-        let minMonth = courseMonth - (maxAge % 1 * 12); 
-        let minDate = new Date(minYear, minMonth, 2); 
+        <div class="mt-8 text-center px-4">
+            <div
+                class="inline-block p-4 rounded-lg bg-blue-50/50 dark:bg-blue-900/10 border border-blue-100 dark:border-blue-800 text-xs text-text-muted-light dark:text-text-muted-dark max-w-2xl mx-auto backdrop-blur-sm">
+                <span
+                    class="font-bold block mb-1 text-primary dark:text-blue-400 uppercase tracking-wide">Disclaimer</span>
+                This tool calculates attempts using the official pattern: <span class="italic font-medium">"Born not
+                    earlier than 2nd Jan/July and not later than 1st Jan/July"</span>. Actual eligibility also depends
+                on Educational Qualification, Gender, and Marital Status.
+            </div>
+            <p class="mt-4 text-xs font-medium text-text-muted-light dark:text-text-muted-dark opacity-60">Developed by
+                Deepak</p>
+        </div>
+    </main>
 
-        let maxYear = courseYear - Math.floor(minAge);
-        let maxMonth = courseMonth - (minAge % 1 * 12); 
-        let maxDate = new Date(maxYear, maxMonth, 1); 
-        
-        return { min: minDate, max: maxDate };
-    }
-
-    window.onload = calculate;
-</script>
-
+    <script src="script.js"></script>
 </body>
+
 </html>
