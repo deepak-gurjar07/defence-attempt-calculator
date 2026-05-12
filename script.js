@@ -1,38 +1,34 @@
-// ─── CORRECTED getOfficialRange ───────────────────────────────────────────────
-//
-// UPSC specifies age as of the 1st of the course commencement month.
-// "born not earlier than" → courseDate - maxAge  (add 1 day → 2nd)
-// "born not later than"   → courseDate - minAge  (→ 1st)
-//
-// courseYear  : year the course commences (exam year + 1 for CDS/AFCAT etc.)
-// courseMonth : 0-based month of commencement (Jan=0, Jul=6 …)
-// minAge, maxAge : in whole years (no fractional months needed for CDS/AFCAT)
+const examMeta = {
+    "Army TES (10+2)": { icon: "school", desc: "Technical Entry Scheme", highlight: false },
+    "Navy 10+2 (B.Tech)": { icon: "sailing", desc: "Cadet Entry Scheme", highlight: false },
+    "NDA": { icon: "shield", desc: "National Defence Academy", highlight: false },
+    "CDS (IMA/INA)": { icon: "military_tech", desc: "Indian Military Academy", highlight: true },
+    "CDS (AFA)": { icon: "flight", desc: "Air Force Academy", highlight: true },
+    "CDS (OTA)": { icon: "local_police", desc: "Officers Training Academy", highlight: true },
+    "AFCAT (Flying)": { icon: "flight_takeoff", desc: "Air Force Common Admission", highlight: true },
+    "AFCAT (Ground Duty)": { icon: "radar", desc: "Air Force Common Admission", highlight: true },
+    "ICG AC": { icon: "anchor", desc: "Indian Coast Guard", highlight: true },
+    "CAPF AC": { icon: "security", desc: "Central Armed Police Forces", highlight: true },
+    "Army SSC Tech": { icon: "engineering", desc: "Short Service Commission", highlight: false },
+    "Army NCC Special": { icon: "military_tech", desc: "NCC Special Entry", highlight: false },
+    "Navy SSC Tech": { icon: "directions_boat", desc: "Short Service Commission", highlight: false }
+};
 
+// ─── FIXED getOfficialRange ───────────────────────────────────────────────────
+// courseYear  : year the course commences
+// courseMonth : 0-based month of commencement (Jan=0, Jul=6)
+// minAge, maxAge : whole years
+//
+// Matches UPSC pattern verified from official notifications:
+//   CDS II 2025 → course Jul 2026 → IMA: 2 Jul 2002 – 1 Jul 2007
+//   CDS I  2026 → course Jan 2027 → IMA: 2 Jan 2003 – 1 Jan 2008
 function getOfficialRange(courseYear, courseMonth, minAge, maxAge) {
-    // "not later than" → born on or before (courseDate - minAge)
-    let maxDate = new Date(courseYear - minAge, courseMonth, 1);   // 1st of that month
-
-    // "not earlier than" → born on or after (courseDate - maxAge + 1 day)
-    let minDate = new Date(courseYear - maxAge, courseMonth, 2);   // 2nd of that month
-
+    // "not later than 1st <month> <year-minAge>"
+    let maxDate = new Date(courseYear - minAge, courseMonth, 1);
+    // "not earlier than 2nd <month> <year-maxAge>"
+    let minDate = new Date(courseYear - maxAge, courseMonth, 2);
     return { min: minDate, max: maxDate };
 }
-
-// ─── VERIFIED PATTERN FROM OFFICIAL NOTIFICATIONS ────────────────────────────
-//
-// CDS II 2025  → course commences Jul 2026  → window: 2 Jul 2001 – 1 Jul 2007 (OTA)
-//                                                       2 Jul 2002 – 1 Jul 2007 (IMA)
-// CDS I  2026  → course commences Jan 2027  → window: 2 Jan 2002 – 1 Jan 2008 (OTA)
-//                                                       2 Jan 2003 – 1 Jan 2008 (IMA)
-//
-// Pattern: every session shifts dates forward by 6 months. ✅
-// Course commencement = January (session I) or July (session II) of the NEXT year.
-//
-// So for exam year Y:
-//   Session I  → courseYear = Y+1, courseMonth = 0  (January)
-//   Session II → courseYear = Y+1, courseMonth = 6  (July)
-
-// ─── CORRECTED calculate() ────────────────────────────────────────────────────
 
 function calculate() {
     const dobInput = document.getElementById('dob');
@@ -49,85 +45,58 @@ function calculate() {
     resultsDiv.innerHTML = "";
 
     // ── Exam definitions ──────────────────────────────────────────────────────
-    // comMonth1 / comMonth2 : 0-based month of course commencement for session I / II
-    // examMonth1/2          : 0-based month the written exam is actually held
-    //                         (used only to decide past/future badge colour)
-    // For CDS & NDA: I ≈ April exam → Jan commencement next year
-    //                II ≈ Sept exam  → Jul commencement next year
+    // offset1 / offset2 : 0-based commencement month for session I / II
+    // examMonth1/2      : 0-based month the written exam is held (for past/future badge)
+    // nextYear          : true  → course commences in year+1 (CDS, NDA)
+    //                     false → course commences in same year (AFCAT, ICG, etc.)
     const exams = [
-        // 10+2 entries – age calculated at course start (~Jan / Jul of SAME year as exam)
-        { name: "Army TES (10+2)",    min: 16.5, max: 19.5, freq: 2,
-          comMonth1: 0,  comMonth2: 6,  sameYear: true,
-          examMonth1: 0, examMonth2: 6 },
-        { name: "Navy 10+2 (B.Tech)", min: 16.5, max: 19.5, freq: 2,
-          comMonth1: 0,  comMonth2: 6,  sameYear: true,
-          examMonth1: 0, examMonth2: 6 },
+        // 10+2 entries — course same year, Jan / Jul
+        { name: "Army TES (10+2)",     min: 16.5, max: 19.5, freq: 2, nextYear: false, offset1: 0, offset2: 6, examMonth1: 0, examMonth2: 6 },
+        { name: "Navy 10+2 (B.Tech)",  min: 16.5, max: 19.5, freq: 2, nextYear: false, offset1: 0, offset2: 6, examMonth1: 0, examMonth2: 6 },
 
-        // NDA – exam Apr/Sept, course Jan/Jul of next year
-        { name: "NDA",                min: 15,   max: 18.5, freq: 2,
-          comMonth1: 0,  comMonth2: 6,  sameYear: false,
-          examMonth1: 3, examMonth2: 8 },
+        // NDA — exam Apr/Sept, course commences Jan/Jul of NEXT year
+        { name: "NDA",                 min: 15,   max: 18.5, freq: 2, nextYear: true,  offset1: 0, offset2: 6, examMonth1: 3, examMonth2: 8 },
 
-        // CDS – exam Apr/Sept, course Jan/Jul of next year
-        { name: "CDS (IMA/INA)",      min: 19,   max: 24,   freq: 2,
-          comMonth1: 0,  comMonth2: 6,  sameYear: false,
-          examMonth1: 3, examMonth2: 8 },
-        { name: "CDS (AFA)",          min: 20,   max: 24,   freq: 2,
-          comMonth1: 0,  comMonth2: 6,  sameYear: false,
-          examMonth1: 3, examMonth2: 8 },
-        { name: "CDS (OTA)",          min: 19,   max: 25,   freq: 2,
-          comMonth1: 0,  comMonth2: 6,  sameYear: false,
-          examMonth1: 3, examMonth2: 8 },
+        // CDS — exam Apr/Sept, course commences Jan/Jul of NEXT year
+        // Verified: CDS II 2025 → course Jul 2026; CDS I 2026 → course Jan 2027
+        { name: "CDS (IMA/INA)",       min: 19,   max: 24,   freq: 2, nextYear: true,  offset1: 0, offset2: 6, examMonth1: 3, examMonth2: 8 },
+        { name: "CDS (AFA)",           min: 20,   max: 24,   freq: 2, nextYear: true,  offset1: 0, offset2: 6, examMonth1: 3, examMonth2: 8 },
+        { name: "CDS (OTA)",           min: 19,   max: 25,   freq: 2, nextYear: true,  offset1: 0, offset2: 6, examMonth1: 3, examMonth2: 8 },
 
-        // AFCAT – Feb/Aug exam, course Jan/Jul of SAME year
-        { name: "AFCAT (Flying)",     min: 20,   max: 24,   freq: 2,
-          comMonth1: 0,  comMonth2: 6,  sameYear: true,
-          examMonth1: 1, examMonth2: 7 },
-        { name: "AFCAT (Ground Duty)",min: 20,   max: 26,   freq: 2,
-          comMonth1: 0,  comMonth2: 6,  sameYear: true,
-          examMonth1: 1, examMonth2: 7 },
+        // AFCAT — exam Feb/Aug, course commences Jan/Jul same year
+        { name: "AFCAT (Flying)",      min: 20,   max: 24,   freq: 2, nextYear: false, offset1: 0, offset2: 6, examMonth1: 1, examMonth2: 7 },
+        { name: "AFCAT (Ground Duty)", min: 20,   max: 26,   freq: 2, nextYear: false, offset1: 0, offset2: 6, examMonth1: 1, examMonth2: 7 },
 
-        // ICG AC – two cycles, commencement ~Jan & Jul same year
-        { name: "ICG AC",             min: 21,   max: 25 + categoryBonus, freq: 2,
-          comMonth1: 0,  comMonth2: 6,  sameYear: true,
-          examMonth1: 3, examMonth2: 9 },
+        // ICG AC — two cycles, course Jan/Jul same year
+        { name: "ICG AC",              min: 21,   max: 25 + categoryBonus, freq: 2, nextYear: false, offset1: 0, offset2: 6, examMonth1: 3, examMonth2: 9 },
 
-        // CAPF AC – once a year, August exam, age as of 1 Aug
-        { name: "CAPF AC",            min: 20,   max: 25 + categoryBonus, freq: 1,
-          comMonth1: 7,  comMonth2: -1, sameYear: true,
-          examMonth1: 7, examMonth2: -1 },
+        // CAPF AC — once a year, age as of 1 Aug
+        { name: "CAPF AC",             min: 20,   max: 25 + categoryBonus, freq: 1, nextYear: false, offset1: 7, offset2: -1, examMonth1: 7, examMonth2: -1 },
 
-        // Army SSC Tech – Apr & Oct notifications, course Jan & Jul
-        { name: "Army SSC Tech",      min: 20,   max: 27,   freq: 2,
-          comMonth1: 0,  comMonth2: 6,  sameYear: true,
-          examMonth1: 3, examMonth2: 9 },
-        { name: "Army NCC Special",   min: 19,   max: 25,   freq: 2,
-          comMonth1: 0,  comMonth2: 6,  sameYear: true,
-          examMonth1: 3, examMonth2: 9 },
-        { name: "Navy SSC Tech",      min: 21,   max: 25,   freq: 2,
-          comMonth1: 0,  comMonth2: 6,  sameYear: true,
-          examMonth1: 0, examMonth2: 6 },
+        // Army SSC Tech — Apr & Oct, course Jan/Jul same year
+        { name: "Army SSC Tech",       min: 20,   max: 27,   freq: 2, nextYear: false, offset1: 0, offset2: 6, examMonth1: 3, examMonth2: 9 },
+        { name: "Army NCC Special",    min: 19,   max: 25,   freq: 2, nextYear: false, offset1: 0, offset2: 6, examMonth1: 3, examMonth2: 9 },
+        { name: "Navy SSC Tech",       min: 21,   max: 25,   freq: 2, nextYear: false, offset1: 0, offset2: 6, examMonth1: 0, examMonth2: 6 },
     ];
 
     const startYear = dob.getFullYear() + 14;
     const endYear   = dob.getFullYear() + 32;
 
-    let examCountWithFutureAttempts = 0;
+    let totalEligibleExams = 0;
     let lastChances = [];
+    let examCountWithFutureAttempts = 0;
 
     exams.forEach(exam => {
         let attemptList = [];
 
         for (let year = startYear; year <= endYear; year++) {
 
-            // ── Session I ────────────────────────────────────────────────────
+            // ── Session I ──────────────────────────────────────────────────
             {
-                const courseYear  = exam.sameYear ? year : year + 1;
-                const courseMonth = exam.comMonth1;
-                const range = getOfficialRange(courseYear, courseMonth, exam.min, exam.max);
+                const courseYear = exam.nextYear ? year + 1 : year;
+                const range = getOfficialRange(courseYear, exam.offset1, exam.min, exam.max);
 
                 if (dob >= range.min && dob <= range.max) {
-                    // Exam date: used only for past/future colouring
                     const examDate = new Date(year, exam.examMonth1, 15);
                     const status   = examDate < today ? "status-past" : "status-future";
                     const label    = exam.freq === 1 ? `${year}` : `${year}-I`;
@@ -135,11 +104,10 @@ function calculate() {
                 }
             }
 
-            // ── Session II (bi-annual exams only) ────────────────────────────
+            // ── Session II (bi-annual only) ────────────────────────────────
             if (exam.freq === 2) {
-                const courseYear  = exam.sameYear ? year : year + 1;
-                const courseMonth = exam.comMonth2;
-                const range = getOfficialRange(courseYear, courseMonth, exam.min, exam.max);
+                const courseYear = exam.nextYear ? year + 1 : year;
+                const range = getOfficialRange(courseYear, exam.offset2, exam.min, exam.max);
 
                 if (dob >= range.min && dob <= range.max) {
                     const examDate = new Date(year, exam.examMonth2, 15);
@@ -149,7 +117,7 @@ function calculate() {
             }
         }
 
-        // ── Count future attempts ─────────────────────────────────────────────
+        // ── Count future attempts ──────────────────────────────────────────
         let futureCount = 0;
         let lastFutureIndex = -1;
         attemptList.forEach((item, i) => {
@@ -159,12 +127,14 @@ function calculate() {
             }
         });
 
+        totalEligibleExams += futureCount;
+
         if (futureCount > 0) {
             examCountWithFutureAttempts++;
             if (futureCount === 1) lastChances.push(exam.name);
         }
 
-        // ── Render ────────────────────────────────────────────────────────────
+        // ── Render row ─────────────────────────────────────────────────────
         if (attemptList.length > 0) {
             const html = attemptList.map((item, index) => {
                 const isLastChance = index === lastFutureIndex;
@@ -239,3 +209,4 @@ function calculate() {
 }
 
 window.onload = calculate;
+         
