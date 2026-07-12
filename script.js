@@ -17,22 +17,43 @@ const examMeta = {
 // ─── FIXED getOfficialRange ───────────────────────────────────────────────────
 // courseYear  : year the course commences
 // courseMonth : 0-based month of commencement (Jan=0, Jul=6)
-// minAge, maxAge : whole years
+// minAge, maxAge : years, may include a .5 (6-month) fraction
 //
 // Matches UPSC pattern verified from official notifications:
 //   CDS II 2025 → course Jul 2026 → IMA: 2 Jul 2002 – 1 Jul 2007
 //   CDS I  2026 → course Jan 2027 → IMA: 2 Jan 2003 – 1 Jan 2008
+//
+// Age is subtracted in whole months rather than passed straight into the
+// Date constructor, since `new Date(2006.5, 0, 1)` truncates the .5 instead
+// of shifting by 6 months — that silently broke every .5-age exam (Army TES,
+// Navy 10+2, NDA) before this fix.
+function subtractAgeFromDate(year, month, day, ageYears) {
+    const totalMonths = year * 12 + month;
+    const ageMonths = Math.round(ageYears * 12);
+    const resultTotalMonths = totalMonths - ageMonths;
+    const resultYear = Math.floor(resultTotalMonths / 12);
+    const resultMonth = ((resultTotalMonths % 12) + 12) % 12;
+    return new Date(resultYear, resultMonth, day);
+}
+
 function getOfficialRange(courseYear, courseMonth, minAge, maxAge) {
     // "not later than 1st <month> <year-minAge>"
-    let maxDate = new Date(courseYear - minAge, courseMonth, 1);
+    let maxDate = subtractAgeFromDate(courseYear, courseMonth, 1, minAge);
     // "not earlier than 2nd <month> <year-maxAge>"
-    let minDate = new Date(courseYear - maxAge, courseMonth, 2);
+    let minDate = subtractAgeFromDate(courseYear, courseMonth, 2, maxAge);
     return { min: minDate, max: maxDate };
 }
 
 function calculate() {
     const dobInput = document.getElementById('dob');
-    if (!dobInput.value) return;
+    if (!dobInput.value) {
+        showStatusMessage({
+            icon: 'calendar_month',
+            title: 'Enter your date of birth above',
+            text: 'to see your remaining attempts across all listed defence exams.'
+        });
+        return;
+    }
 
     const parts = dobInput.value.split('-');
     const dob = new Date(parts[0], parts[1] - 1, parts[2]);
@@ -40,6 +61,26 @@ function calculate() {
     const categoryBonus = parseInt(document.getElementById('category').value);
     const today = new Date();
     today.setHours(0, 0, 0, 0);
+
+    if (isNaN(dob.getTime())) {
+        showStatusMessage({
+            icon: 'error',
+            title: 'Invalid date',
+            text: 'Please enter a valid date of birth.',
+            isError: true
+        });
+        return;
+    }
+
+    if (dob > today) {
+        showStatusMessage({
+            icon: 'error',
+            title: 'Invalid date of birth',
+            text: 'Date of birth cannot be in the future.',
+            isError: true
+        });
+        return;
+    }
 
     const resultsDiv = document.getElementById('results');
     resultsDiv.innerHTML = "";
@@ -79,10 +120,24 @@ function calculate() {
         { name: "Navy SSC Tech",       min: 21,   max: 25,   freq: 2, nextYear: false, offset1: 0, offset2: 6, examMonth1: 0, examMonth2: 6 },
     ];
 
-    const startYear = dob.getFullYear() + 14;
-    const endYear   = dob.getFullYear() + 32;
+    const minPossibleAge = Math.min(...exams.map(e => e.min));
+    const maxPossibleAge = Math.max(...exams.map(e => e.max));
 
-    let totalEligibleExams = 0;
+    const currentAge = getAgeInYears(dob, today);
+    if (currentAge > maxPossibleAge + 5) {
+        showStatusMessage({
+            icon: 'sentiment_dissatisfied',
+            title: 'No eligible exams for this date of birth',
+            text: `At ${currentAge} years old, this is above the upper age limit for every exam listed here.`,
+            isError: true
+        });
+        return;
+    }
+
+    const startYear = dob.getFullYear() + Math.floor(minPossibleAge) - 1;
+    const endYear   = dob.getFullYear() + Math.ceil(maxPossibleAge) + 3;
+
+    let totalRemainingAttempts = 0;
     let lastChances = [];
     let examCountWithFutureAttempts = 0;
 
@@ -127,7 +182,7 @@ function calculate() {
             }
         });
 
-        totalEligibleExams += futureCount;
+        totalRemainingAttempts += futureCount;
 
         if (futureCount > 0) {
             examCountWithFutureAttempts++;
@@ -137,7 +192,7 @@ function calculate() {
         // ── Render row ─────────────────────────────────────────────────────
         if (attemptList.length > 0) {
             const html = attemptList.map((item, index) => {
-                const isLastChance = index === lastFutureIndex;
+                const isLastChance = futureCount === 1 && index === lastFutureIndex;
                 const isPast       = item.status === 'status-past';
 
                 if (isPast) {
@@ -177,7 +232,7 @@ function calculate() {
                     <div class="col-span-4 lg:col-span-3 mb-4 md:mb-0">
                         <div class="flex items-center gap-4">
                             <div class="w-12 h-12 rounded-full ${iconBgClass} flex shrink-0 items-center justify-center group-hover:bg-primary group-hover:text-white transition-all duration-300">
-                                <span class="material-symbols-outlined">${meta.icon}</span>
+                                <span class="material-symbols-outlined" aria-hidden="true">${meta.icon}</span>
                             </div>
                             <div class="min-w-0">
                                 <h3 class="text-base font-bold text-text-main-light dark:text-text-main-dark ${titleClass} transition-colors truncate">${exam.name}</h3>
@@ -205,8 +260,65 @@ function calculate() {
     }
 
     document.getElementById('eligible-exams-count').innerText = `${examCountWithFutureAttempts} Exams`;
-    document.getElementById('last-chance-exam').innerText = lastChances.length > 0 ? lastChances.join(', ') : 'None';
+    document.getElementById('total-attempts-count').innerText = `${totalRemainingAttempts}`;
+
+    const lastChanceText = lastChances.length > 0 ? lastChances.join(', ') : 'None';
+    const lastChanceEl = document.getElementById('last-chance-exam');
+    lastChanceEl.innerText = lastChanceText;
+    lastChanceEl.title = lastChanceText;
+
+    showResults();
 }
 
-window.onload = calculate;
-         
+function getAgeInYears(dob, today) {
+    let age = today.getFullYear() - dob.getFullYear();
+    const hadBirthday = today.getMonth() > dob.getMonth() ||
+        (today.getMonth() === dob.getMonth() && today.getDate() >= dob.getDate());
+    if (!hadBirthday) age--;
+    return age;
+}
+
+function showStatusMessage({ icon, title, text, isError = false }) {
+    document.getElementById('results-section').classList.add('hidden');
+    const statusMessage = document.getElementById('status-message');
+    statusMessage.classList.remove('hidden');
+
+    const iconEl = document.getElementById('status-message-icon');
+    iconEl.textContent = icon;
+    iconEl.className = `material-symbols-outlined text-4xl ${isError ? 'text-orange-500 dark:text-orange-400' : 'text-primary/60 dark:text-blue-400/60'}`;
+
+    document.getElementById('status-message-title').textContent = title;
+    document.getElementById('status-message-text').textContent = text;
+}
+
+function showResults() {
+    document.getElementById('status-message').classList.add('hidden');
+    document.getElementById('results-section').classList.remove('hidden');
+}
+
+function applyTheme(isDark) {
+    document.documentElement.classList.toggle('dark', isDark);
+    const icon = document.getElementById('theme-toggle-icon');
+    if (icon) icon.textContent = isDark ? 'light_mode' : 'dark_mode';
+    const btn = document.getElementById('theme-toggle');
+    if (btn) btn.setAttribute('aria-pressed', String(isDark));
+}
+
+function toggleTheme() {
+    const isDark = !document.documentElement.classList.contains('dark');
+    try { localStorage.setItem('theme', isDark ? 'dark' : 'light'); } catch (e) {}
+    applyTheme(isDark);
+}
+
+function initApp() {
+    const dobInput = document.getElementById('dob');
+    dobInput.max = new Date().toISOString().slice(0, 10);
+
+    applyTheme(document.documentElement.classList.contains('dark'));
+    const themeToggle = document.getElementById('theme-toggle');
+    if (themeToggle) themeToggle.onclick = toggleTheme;
+
+    calculate();
+}
+
+document.addEventListener('DOMContentLoaded', initApp);
